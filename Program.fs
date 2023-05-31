@@ -25,7 +25,7 @@ player.Print
 
 
 //working with the maze now
-type Cell = Wall | Open 
+type Cell = Wall | Open | Chest | Monster | Boss | Fountain 
 
 let GetRandom x = 
     let rnd = new Random()
@@ -55,9 +55,13 @@ let ValidMove xchange ychange sizeofmaze (player: Player) =
 
 //generate it randomly
 let SetRandomCell = 
-    let v = GetRandom 1
+    let v = GetRandom 10
     match v with
     | 0 -> Cell.Wall
+    | 1 -> Cell.Chest
+    | 2 -> Cell.Boss
+    | 3 -> Cell.Fountain
+    | 4 -> Cell.Monster
     | _ -> Cell.Open
 
 // let CreateMaze ( maze : Cell array array) =
@@ -70,13 +74,32 @@ Console.WriteLine(maze.[1].[1])
 
 
 
+//#nowarn "40"
 
 //getting input from user
-// let rec GetDirection =
-//     let keyPressed = Console.ReadKey()
-//     match keyPressed.Key with
-//     | upp -> (0,-1)
-//      | down -> (0,1)
-//      | right -> (1,0)
-//     | left -> (0,-1)
-//      |_ -> GetDirection 
+let rec GetDirection =
+    
+    let mutable keyPressed = ConsoleKeyInfo()
+    keyPressed <- Console.ReadKey()
+
+    match keyPressed.Key with
+    | ConsoleKey.UpArrow -> (0,-1)
+    | ConsoleKey.DownArrow -> (0,1)
+    | ConsoleKey.RightArrow -> (1,0)
+    | ConsoleKey.LeftArrow -> (0,-1)
+    | _ -> (0,0) 
+
+
+let InitialLoop = 
+    while not (Console.ReadKey().Key.Equals(ConsoleKey.Escape)) do
+        Console.Clear()
+        let mutable a = (0,0)
+        a <- GetDirection
+        Console.WriteLine(a.ToString())
+
+        
+
+
+        
+
+

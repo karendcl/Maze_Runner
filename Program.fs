@@ -16,11 +16,6 @@ type Player() =
     member this.Xpos = Positionx
     member this.YPos =  Positiony
 
-let player = new Player()
-player.Initialize(10,10,"hello")
-player.Print
-player.MoveX 5
-player.Print
 
 
 
@@ -70,36 +65,36 @@ let SetRandomCell =
 //           place <- SetRandomCell
     
 
-Console.WriteLine(maze.[1].[1])
-
-
-
 //#nowarn "40"
 
 //getting input from user
-let rec GetDirection =
-    
-    let mutable keyPressed = ConsoleKeyInfo()
-    keyPressed <- Console.ReadKey()
-
-    match keyPressed.Key with
+let rec GetDirection (keyPressed: ConsoleKey)=
+    match keyPressed with
     | ConsoleKey.UpArrow -> (0,-1)
     | ConsoleKey.DownArrow -> (0,1)
     | ConsoleKey.RightArrow -> (1,0)
-    | ConsoleKey.LeftArrow -> (0,-1)
+    | ConsoleKey.LeftArrow -> (-1,0)
     | _ -> (0,0) 
 
 
 let InitialLoop = 
-    while not (Console.ReadKey().Key.Equals(ConsoleKey.Escape)) do
-        Console.Clear()
+    let mutable k = ConsoleKey.A
+    while not (k.Equals(ConsoleKey.Escape)) do
         let mutable a = (0,0)
-        a <- GetDirection
+        k <- Console.ReadKey().Key
+        a <- GetDirection k
+        Console.Clear()
         Console.WriteLine(a.ToString())
 
         
 
 
         
-
+//testing zone
+let player = new Player()
+player.Initialize(10,10,"hello")
+player.Print
+player.MoveX 5
+player.Print
+Console.WriteLine(maze.[1].[1])
 

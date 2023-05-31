@@ -77,6 +77,22 @@ let rec GetDirection (keyPressed: ConsoleKey)=
     | _ -> (0,0) 
 
 
+
+let MovePlayer (x:int)  (y:int) (jugador:Player) =
+    jugador.MoveX x
+    jugador.MoveY y
+    
+
+
+
+        
+//testing zone
+let player = new Player()
+player.Initialize(1,1,"Karen")
+player.Print
+
+
+
 let InitialLoop = 
     let mutable k = ConsoleKey.A
     while not (k.Equals(ConsoleKey.Escape)) do
@@ -84,17 +100,11 @@ let InitialLoop =
         k <- Console.ReadKey().Key
         a <- GetDirection k
         Console.Clear()
-        Console.WriteLine(a.ToString())
+        player.Print
 
-        
+        let  b = fst a
+        let c = snd a
+        let  condition = ValidMove b c 10 player
 
-
-        
-//testing zone
-let player = new Player()
-player.Initialize(10,10,"hello")
-player.Print
-player.MoveX 5
-player.Print
-Console.WriteLine(maze.[1].[1])
-
+        if (condition) then (MovePlayer b c player) 
+        player.Print

@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "UdZq4Z+kN9/kCkKpfdnyah19zEvqwPSHqtsTJ9eAYt4BKZkGlpRqY/GrGa2NJMAqfUYbZfeVOjh8WZSUM7vQDQ==",
+  "success": true,
+  "projectFilePath": "C:\\Karen\\Universidad\\4to semestre\\Programacion Declarat\\Final Project\\MazeRunner2.0\\MazeRunner2.0.fsproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\karen\\.nuget\\packages\\fsharp.core\\6.0.1\\fsharp.core.6.0.1.nupkg.sha512"
+  ],
+  "logs": []
+}

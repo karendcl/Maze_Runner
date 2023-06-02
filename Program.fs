@@ -15,7 +15,17 @@ type Player() =
         Positiony <- y
         this.name <- name
     
-    member this.Print = printf " Nombre: %s, Posicion: %i, %i, Health %i" this.name Positionx Positiony Health
+    
+    
+    member this.Print = 
+        Console.WriteLine("Nombre: " + this.name)
+        Console.WriteLine("Posicion: " + Positionx.ToString() + " " + Positiony.ToString())
+        Console.WriteLine("Health: " + Health.ToString())
+        Console.WriteLine("Inventario: ")
+        for (i:string) in Inventory do
+            Console.Write(i + " ")
+
+       //let str = " Nombre: %s, Posicion: %i, %i, Health: %i, Inventario: %s items: %i" this.name Positionx Positiony Health PrintInventory Inventory.Length
     member this.MoveX steps = Positionx <- Positionx + steps
     member this.MoveY steps = Positiony <- Positiony + steps
     member this.Xpos = Positionx
@@ -31,7 +41,8 @@ type Player() =
         let h = Health - a
         Health <- h
     member this.RegenerateHealth a = 
-        Health <- Health + a
+        let h = Health + a
+        Health <- h
     
         
     
@@ -42,7 +53,7 @@ type Player() =
         let length = lista.Length
         if ind >= length then -1 elif (lista.Item ind).Equals(obje) then ind else GetIndex (ind+1) lista obje
     let rec AddToList (lst : list<string>) (s:string)=
-        s::lst
+       s::lst
     
     let Remove (listaOrig : list<string>) (s: string) =
         let ind = GetIndex 0 listaOrig s
@@ -68,6 +79,8 @@ type Player() =
 //working with the maze now
 type Cell = Wall | Open | Chest | Monster | Boss | Fountain 
 
+let Resources = ["Coal"; "Stick"; "Obj1";"Obj2"]
+
 let GetRandom x = 
     let rnd = new Random()
     rnd.Next(x)
@@ -76,7 +89,7 @@ let mutable maze =
     [|
      [|Wall;Wall;Wall;Wall;Wall;Wall;Wall;Wall;Wall;Wall|];
      [|Wall;Open;Open;Open;Open;Open;Open;Open;Open;Wall|];
-     [|Wall;Monster;Open;Open;Open;Open;Open;Open;Open;Wall|];  
+     [|Wall;Chest;Open;Open;Open;Open;Open;Open;Open;Wall|];  
      [|Wall;Open;Open;Open;Wall;Open;Open;Open;Open;Wall|];
      [|Wall;Open;Open;Open;Open;Open;Open;Open;Open;Wall|];
      [|Wall;Open;Open;Open;Open;Open;Open;Open;Open;Wall|];
@@ -87,13 +100,11 @@ let mutable maze =
     |]
 
 
-
 let ValidMove xchange ychange sizeofmaze (player: Player) = 
         let newpos1 = player.Xpos + xchange
         let newpos2 = player.YPos + ychange
 
         not(newpos1 < 0 || newpos2<0 || newpos1 >= sizeofmaze || newpos2>=sizeofmaze || maze.[newpos2].[newpos1] = Cell.Wall) 
-
 
 
 //generate it randomly
@@ -131,11 +142,18 @@ let GetDirection (keyPressed: ConsoleKey) (player : Player)=
 
 
 let FightMonster (jugador:Player) = 
-   let MonsterAtk = GetRandom jugador.Atk
-   let d = MonsterAtk - jugador.Def + jugador.Atk
-   if d>0 then jugador.Damage d else jugador.RegenerateHealth d
+   let MonsterAtk = GetRandom jugador.Atk * 2
+   let MonsterDef = GetRandom jugador.Def * 2
+   let d = MonsterAtk + MonsterDef - jugador.Def - jugador.Atk
+   let absd = abs d
+   if d>0 then jugador.Damage absd else jugador.RegenerateHealth absd
 
-
+let FoundChest (jugador:Player)=
+    let l = Resources.Length
+    let ind = GetRandom l
+    let drop = Resources.Item ind
+   
+    jugador.AddToInventory drop
 let InteractWithMaze (jugador:Player) (maze: Cell array array)=
     let a = jugador.Xpos
     let b = jugador.YPos
@@ -143,6 +161,7 @@ let InteractWithMaze (jugador:Player) (maze: Cell array array)=
 
     match thing with
     | Cell.Monster -> FightMonster jugador
+    | Cell.Chest -> FoundChest jugador
     | _ -> MovePlayer 0 0 jugador
         
 //testing zone

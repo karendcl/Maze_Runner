@@ -74,8 +74,7 @@ type Player() =
             
     member this.RemoveFromInventory x = Remove Inventory x  
 
-        
-
+   
 //working with the maze now
 type Cell = Wall | Open | Chest | Monster | Boss | Fountain 
 
@@ -90,7 +89,7 @@ let mutable maze =
      [|Wall;Wall;Wall;Wall;Wall;Wall;Wall;Wall;Wall;Wall|];
      [|Wall;Open;Open;Open;Open;Open;Open;Open;Open;Wall|];
      [|Wall;Chest;Open;Open;Open;Open;Open;Open;Open;Wall|];  
-     [|Wall;Open;Open;Open;Wall;Open;Open;Open;Open;Wall|];
+     [|Wall;Monster;Open;Open;Wall;Open;Open;Open;Open;Wall|];
      [|Wall;Open;Open;Open;Open;Open;Open;Open;Open;Wall|];
      [|Wall;Open;Open;Open;Open;Open;Open;Open;Open;Wall|];
      [|Wall;Open;Open;Open;Open;Open;Open;Open;Open;Wall|];
@@ -99,7 +98,15 @@ let mutable maze =
      [|Wall;Wall;Wall;Wall;Wall;Wall;Wall;Wall;Wall;Wall|]
     |]
 
+let casilla x y =
+    let thing = maze.[x].[y]
+    match thing with
+    | Cell.Wall -> false
+    | Cell.Boss -> false
+    | _ -> true
 
+let mutable MazeMask = Array2D.init 10 10 ( casilla )
+   
 let ValidMove xchange ychange sizeofmaze (player: Player) = 
         let newpos1 = player.Xpos + xchange
         let newpos2 = player.YPos + ychange
@@ -131,56 +138,78 @@ let MovePlayer (x:int)  (y:int) (jugador:Player) =
     jugador.MoveX x
     jugador.MoveY y
 
+
 let GetDirection (keyPressed: ConsoleKey) (player : Player)=
     match keyPressed with
     | ConsoleKey.UpArrow -> if (ValidMove 0 -1 10 player) then (MovePlayer 0 -1 player)
     | ConsoleKey.DownArrow -> if (ValidMove 0 1 10 player) then (MovePlayer 0 1 player)
     | ConsoleKey.RightArrow -> if (ValidMove 1 0 10 player) then (MovePlayer 1 0 player)
     | ConsoleKey.LeftArrow -> if (ValidMove -1 0 10 player) then (MovePlayer -1 0 player)
+    //| ConsoleKey.C -> Craft player
     | _ -> MovePlayer 0 0 player 
 
+let FoundChest (jugador:Player)=
+    let l = Resources.Length
+    let ind = GetRandom l
+    let drop = Resources.Item ind
+    jugador.AddToInventory drop
 
+let WonMonsterFight (jugador:Player) (damage:int) =
+    jugador.RegenerateHealth damage
+    let b = GetRandom 2
+    match b with
+    |0 -> MovePlayer 0 0 jugador
+    |_ -> FoundChest jugador
 
 let FightMonster (jugador:Player) = 
    let MonsterAtk = GetRandom jugador.Atk * 2
    let MonsterDef = GetRandom jugador.Def * 2
    let d = MonsterAtk + MonsterDef - jugador.Def - jugador.Atk
    let absd = abs d
-   if d>0 then jugador.Damage absd else jugador.RegenerateHealth absd
+   if d>0 then jugador.Damage absd else WonMonsterFight jugador absd
 
-let FoundChest (jugador:Player)=
-    let l = Resources.Length
-    let ind = GetRandom l
-    let drop = Resources.Item ind
-   
-    jugador.AddToInventory drop
-let InteractWithMaze (jugador:Player) (maze: Cell array array)=
+
+let InteractWithMaze (jugador:Player) (maze: Cell array array) =
     let a = jugador.Xpos
     let b = jugador.YPos
     let thing = maze.[b].[a]
 
-    match thing with
-    | Cell.Monster -> FightMonster jugador
-    | Cell.Chest -> FoundChest jugador
-    | _ -> MovePlayer 0 0 jugador
+    let NewPosition = MazeMask[b,a]
+    if NewPosition then
+        MazeMask[b,a] <- false
+        match thing with
+        | Cell.Monster -> FightMonster jugador
+        | Cell.Chest -> FoundChest jugador
+        | _ -> MovePlayer 0 0 jugador
+    else MovePlayer 0 0 jugador
         
-//testing zone
-let player = new Player()
-player.Initialize(1,1,"Karen")
 
-
-let PrintMaze (maze: Cell array array)=
+let PrintMaze (maze)=
     for row in maze do
         Console.WriteLine()
         for item in row do
             Console.Write(" " + item.ToString())
-    
+
+let PrintBoolMaze boolMaze =
+    for i in [0..MazeMask.GetLength(0)-1] do
+        Console.WriteLine()
+        for j in [0..MazeMask.GetLength(1)-1] do
+            Console.Write(" " + MazeMask[i,j].ToString())
 
 let InitialLoop = 
+//generate maze
+//get random drop points for player while its not a valid starting point
+//check with bfs that its a valid maze
+    let player = new Player()
+    player.Initialize(1,1,"Karen")
+
+
     let mutable k = ConsoleKey.A
     while not (k.Equals(ConsoleKey.Escape)) do
         player.Print
         PrintMaze maze
+        Console.WriteLine()
+        PrintBoolMaze MazeMask
         k <- Console.ReadKey().Key
         GetDirection k player
         InteractWithMaze player maze

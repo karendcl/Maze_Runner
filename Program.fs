@@ -78,40 +78,38 @@ type Player() =
 //working with the maze now
 type Cell = Wall | Open | Chest | Monster | Boss | Fountain 
 
-let Resources = ["Coal"; "Stick"; "Obj1";"Obj2"]
-
+let Resources = ["Coal"; "Stick"; "Obj1";"Obj2";"Obj3"]
+let mutable dimension = 15
 let GetRandom x = 
     let rnd = new Random()
     rnd.Next(x)
 
-let mutable maze = 
-    [|
-     [|Wall;Wall;Wall;Wall;Wall;Wall;Wall;Wall;Wall;Wall|];
-     [|Wall;Open;Open;Open;Open;Open;Open;Open;Open;Wall|];
-     [|Wall;Chest;Open;Open;Open;Open;Open;Open;Open;Wall|];  
-     [|Wall;Monster;Open;Open;Wall;Open;Open;Open;Open;Wall|];
-     [|Wall;Open;Open;Open;Open;Open;Open;Open;Open;Wall|];
-     [|Wall;Open;Open;Open;Open;Open;Open;Open;Open;Wall|];
-     [|Wall;Open;Open;Open;Open;Open;Open;Open;Open;Wall|];
-     [|Wall;Open;Open;Open;Open;Open;Open;Open;Open;Wall|];
-     [|Wall;Open;Open;Open;Open;Open;Open;Open;Open;Wall|];
-     [|Wall;Wall;Wall;Wall;Wall;Wall;Wall;Wall;Wall;Wall|]
-    |]
+let casilla_thing x y =
+    let i = GetRandom 7
 
-let casilla x y =
-    let thing = maze.[x].[y]
+    match i with
+    | 0 -> Cell.Wall
+    | 1 -> Cell.Chest
+    | 2 -> Cell.Fountain
+    | 3 -> Cell.Monster
+    | _ -> Cell.Open
+
+let mutable maze = Array2D.init 10 10 (casilla_thing)
+
+let casilla_bool x y =
+    let thing = maze[x,y]
     match thing with
     | Cell.Wall -> false
     | Cell.Boss -> false
     | _ -> true
 
-let mutable MazeMask = Array2D.init 10 10 ( casilla )
+let mutable MazeMask = Array2D.init 10 10 ( casilla_bool )
    
 let ValidMove xchange ychange sizeofmaze (player: Player) = 
         let newpos1 = player.Xpos + xchange
         let newpos2 = player.YPos + ychange
 
-        not(newpos1 < 0 || newpos2<0 || newpos1 >= sizeofmaze || newpos2>=sizeofmaze || maze.[newpos2].[newpos1] = Cell.Wall) 
+        not(newpos1 < 0 || newpos2<0 || newpos1 >= sizeofmaze || newpos2>=sizeofmaze || maze[newpos2,newpos1] = Cell.Wall) 
 
 
 //generate it randomly
@@ -169,10 +167,10 @@ let FightMonster (jugador:Player) =
    if d>0 then jugador.Damage absd else WonMonsterFight jugador absd
 
 
-let InteractWithMaze (jugador:Player) (maze: Cell array array) =
+let InteractWithMaze (jugador:Player)  =
     let a = jugador.Xpos
     let b = jugador.YPos
-    let thing = maze.[b].[a]
+    let thing = maze[b,a]
 
     let NewPosition = MazeMask[b,a]
     if NewPosition then
@@ -184,13 +182,14 @@ let InteractWithMaze (jugador:Player) (maze: Cell array array) =
     else MovePlayer 0 0 jugador
         
 
-let PrintMaze (maze)=
-    for row in maze do
+let PrintMaze =
+    for i in [0..maze.GetLength(0)-1] do
         Console.WriteLine()
-        for item in row do
-            Console.Write(" " + item.ToString())
+        for j in [0..maze.GetLength(1)-1] do
+            Console.Write(" " + maze[i,j].ToString())
 
-let PrintBoolMaze boolMaze =
+
+let PrintBoolMaze =
     for i in [0..MazeMask.GetLength(0)-1] do
         Console.WriteLine()
         for j in [0..MazeMask.GetLength(1)-1] do
@@ -207,11 +206,11 @@ let InitialLoop =
     let mutable k = ConsoleKey.A
     while not (k.Equals(ConsoleKey.Escape)) do
         player.Print
-        PrintMaze maze
+        PrintMaze
         Console.WriteLine()
-        PrintBoolMaze MazeMask
+        PrintBoolMaze
         k <- Console.ReadKey().Key
         GetDirection k player
-        InteractWithMaze player maze
+        InteractWithMaze player 
         Console.Clear()
         

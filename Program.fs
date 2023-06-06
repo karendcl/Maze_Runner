@@ -1,4 +1,5 @@
 ﻿open System
+open System.IO
 let rec AddToList (lst) (s)= s::lst
 let rec GetIndex (ind :int) ( lista : list<'a>) (obje:'a) =
         let length = lista.Length
@@ -14,6 +15,16 @@ let Remove (listaOrig ) (s) =
                 newl <- AddToList newl (listaOrig.Item index)
             newl
             else listaOrig
+
+
+let rec FromArrayToList (lst : list<'a>) (ar : array<'a>) (ind : int)=
+    if ind.Equals(-1) 
+        then lst 
+    else FromArrayToList (ar.[ind]::lst) (ar) (ind-1) 
+
+
+  
+
 
 //working with the player
 type Player(name :string) =
@@ -79,8 +90,25 @@ type Cell = Wall | Open | Chest | Monster | Boss | Fountain
 let Resources = ["Coal"; "Stick"; "Wood";"Stone";"Iron";"Gold";"RedStone";"Diamond";"Netherite";"Obsidian";"Emerald";"Copper";"Sand"; "Wool"]
 let mutable Crafts: CraftedObject list = []
 
+let readlines (filepath :string) = 
+    let mutable (res: string list) = []
+    use sr = new StreamReader(filepath)
+    while not sr.EndOfStream do
+        res <- AddToList res (sr.ReadLine())
+    res
+
+let CreateCraftedObject( recipe :string) =
+    let a = recipe.Split('=')
+    let name = a.[0]
+    let b =  a[1].Split(',')
+    Crafts <- AddToList Crafts (new CraftedObject(name, (FromArrayToList [] b (b.Length-1) ) ))
+
+
 //let InitializeCrafts() = 
-    //read txt Format: <Craft Name> = <Resource>,<Resource>,<Resource>,..., <Resource>#
+    //read txt Format: <Craft Name> = <Resource>,<Resource>,<Resource>,..., <Resource>
+    //let filepath = filepath
+    //let AllRecipes = readlines filepath
+    //for i in AllRecipes CreateCraftedObject i
 
 let mutable dimension = 15
 let GetRandom x = 

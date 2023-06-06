@@ -10,13 +10,14 @@ let rec GetIndex (ind :int) ( lista : list<'a>) (obje:'a) =
         if ind >= length then -1 elif (lista.Item ind).Equals(obje) then ind else GetIndex (ind+1) lista obje
 
 let rec RemoveOnce (listaorig : list<'a>) (listares : list<'a>) (item :'a) (found : bool)=
-    let a = listaorig.Head
-    let b = listaorig.Tail
 
     //si la lista original esta vacia no hay mas que hacer
     if listaorig.Length.Equals(0) then listares
     //si ya se encontro se copia lo que resta
-    elif found.Equals(true) 
+    else
+    let a = listaorig.Head
+    let b = listaorig.Tail
+    if found.Equals(true) 
         then RemoveOnce b (a::listares) item true
     else
         if listaorig.Head.Equals(item) then RemoveOnce b listares item true
@@ -272,12 +273,14 @@ let InitialLoop =
 
     //get random drop points for player while its not a valid starting point
     //check with bfs that its a valid maze
+    //Remove is not working
+
+
+
     Console.Clear()
     let player = new Player("Karen")
     player.Initialize(1,1)
     InitializeCrafts()
-
-    
 
 
     let mutable k = ConsoleKey.A
@@ -286,7 +289,7 @@ let InitialLoop =
         PrintMaze()
         Console.WriteLine()
         PrintBoolMaze()
-        k <- Console.ReadKey().Key
+        k <- Console.ReadKey(false).Key
         GetDirection k player
         InteractWithMaze player 
         Console.Clear()

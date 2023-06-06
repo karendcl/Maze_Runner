@@ -1,0 +1,2 @@
+Glass = Sand,Sand,Sand
+Bed = Wood,Wood,Wool

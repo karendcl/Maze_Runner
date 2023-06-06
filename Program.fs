@@ -104,11 +104,11 @@ let CreateCraftedObject( recipe :string) =
     Crafts <- AddToList Crafts (new CraftedObject(name, (FromArrayToList [] b (b.Length-1) ) ))
 
 
-//let InitializeCrafts() = 
+let InitializeCrafts() = 
     //read txt Format: <Craft Name> = <Resource>,<Resource>,<Resource>,..., <Resource>
-    //let filepath = filepath
-    //let AllRecipes = readlines filepath
-    //for i in AllRecipes CreateCraftedObject i
+    let filepath = __SOURCE_DIRECTORY__ + "\Crafts.txt"
+    let AllRecipes = readlines filepath
+    for i in AllRecipes do CreateCraftedObject i
 
 let mutable dimension = 15
 let GetRandom x = 
@@ -214,6 +214,10 @@ let InitialLoop =
     Console.Clear()
     let player = new Player("Karen")
     player.Initialize(1,1)
+    InitializeCrafts()
+
+    for i in Crafts do
+        Console.WriteLine(i.ToString())
 
 
     let mutable k = ConsoleKey.A

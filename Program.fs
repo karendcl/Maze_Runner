@@ -9,6 +9,8 @@ let rec GetIndex (ind :int) ( lista : list<'a>) (obje:'a) =
         let length = lista.Length
         if ind >= length then -1 elif (lista.Item ind).Equals(obje) then ind else GetIndex (ind+1) lista obje
 
+///Removes one occurrence of the item
+///Send the bool as false
 let rec RemoveOnce (listaorig : list<'a>) (listares : list<'a>) (item :'a) (found : bool)=
 
     //si la lista original esta vacia no hay mas que hacer
@@ -23,6 +25,7 @@ let rec RemoveOnce (listaorig : list<'a>) (listares : list<'a>) (item :'a) (foun
         if listaorig.Head.Equals(item) then RemoveOnce b listares item true
         else RemoveOnce b (a::listares) item false
 
+let Remove (lista: list<'a>) (item:'a) = RemoveOnce lista [] item false
 let rec FromArrayToList (lst : list<'a>) (ar : array<'a>) (ind  : int)=
     if ind < 0 then lst 
     else FromArrayToList (ar.[ind]::lst) (ar) (ind-1) 
@@ -76,7 +79,7 @@ type Player(name :string) =
     member this.AddToInventory x = 
         Inventory <- AddToList Inventory x
             
-    member this.RemoveFromInventory x = Inventory <- RemoveOnce Inventory [] x false  
+    member this.RemoveFromInventory x = Inventory <- Remove Inventory x   
 
     member this.MoveX steps = Positionx <- Positionx + steps
 
@@ -150,6 +153,7 @@ let casilla_thing x y =
 
     match i with
     | 0 -> Cell.Wall
+    | 4 -> Cell.Wall
     | 1 -> Cell.Chest
     | 2 -> Cell.Fountain
     | 3 -> Cell.Monster
@@ -198,7 +202,7 @@ let rec CheckForRecipe (inventoryLst: list<'a>) (recipeLeft :list<'a>)=
         let a = recipeLeft.Head
         if Contains inventoryLst a 
             then
-                CheckForRecipe (RemoveOnce inventoryLst [] a false) recipeLeft.Tail 
+                CheckForRecipe (Remove inventoryLst a ) recipeLeft.Tail 
             else false
 let TryCraft (player:Player) (obje: CraftedObject) =
     if CheckForRecipe player.InventoryCopy obje.Recipe then
@@ -273,9 +277,6 @@ let InitialLoop =
 
     //get random drop points for player while its not a valid starting point
     //check with bfs that its a valid maze
-    //Remove is not working
-
-
 
     Console.Clear()
     let player = new Player("Karen")

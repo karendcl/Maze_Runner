@@ -78,7 +78,7 @@ type Player() =
 //working with the maze now
 type Cell = Wall | Open | Chest | Monster | Boss | Fountain 
 
-let Resources = ["Coal"; "Stick"; "Obj1";"Obj2";"Obj3"]
+let Resources = ["Coal"; "Stick"; "Wood";"Stone";"Iron";"Gold";"RedStone";"Diamond";"Netherite";"Obsidian";"Emerald";"Copper";"Sand"]
 let mutable dimension = 15
 let GetRandom x = 
     let rnd = new Random()
@@ -111,25 +111,6 @@ let ValidMove xchange ychange sizeofmaze (player: Player) =
 
         not(newpos1 < 0 || newpos2<0 || newpos1 >= sizeofmaze || newpos2>=sizeofmaze || maze[newpos2,newpos1] = Cell.Wall) 
 
-
-//generate it randomly
-// let SetRandomCell = 
-//     let v = GetRandom 10
-//     match v with
-//     | 0 -> Cell.Wall
-//     | 1 -> Cell.Chest
-//     | 2 -> Cell.Boss
-//     | 3 -> Cell.Fountain
-//     | 4 -> Cell.Monster
-//     | _ -> Cell.Open
-
-// let CreateMaze ( maze : Cell array array) =
-//     for row in maze do
-//         for place in row do
-//           place <- SetRandomCell
-    
-
-//#nowarn "40"
 
 //getting input from user
 let MovePlayer (x:int)  (y:int) (jugador:Player) =
@@ -182,23 +163,24 @@ let InteractWithMaze (jugador:Player)  =
     else MovePlayer 0 0 jugador
         
 
-let PrintMaze =
+let PrintMaze() =
     for i in [0..maze.GetLength(0)-1] do
         Console.WriteLine()
         for j in [0..maze.GetLength(1)-1] do
             Console.Write(" " + maze[i,j].ToString())
 
 
-let PrintBoolMaze =
+let PrintBoolMaze() =
     for i in [0..MazeMask.GetLength(0)-1] do
         Console.WriteLine()
         for j in [0..MazeMask.GetLength(1)-1] do
             Console.Write(" " + MazeMask[i,j].ToString())
 
 let InitialLoop = 
-//generate maze
-//get random drop points for player while its not a valid starting point
-//check with bfs that its a valid maze
+
+    //get random drop points for player while its not a valid starting point
+    //check with bfs that its a valid maze
+
     let player = new Player()
     player.Initialize(1,1,"Karen")
 
@@ -206,11 +188,19 @@ let InitialLoop =
     let mutable k = ConsoleKey.A
     while not (k.Equals(ConsoleKey.Escape)) do
         player.Print
-        PrintMaze
+        PrintMaze()
         Console.WriteLine()
-        PrintBoolMaze
+        PrintBoolMaze()
         k <- Console.ReadKey().Key
         GetDirection k player
         InteractWithMaze player 
         Console.Clear()
         
+
+[<EntryPoint>]
+let main args = 
+    InitialLoop
+    1
+
+
+

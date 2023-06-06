@@ -1,4 +1,20 @@
 ﻿open System
+let rec AddToList (lst) (s)= s::lst
+let rec GetIndex (ind :int) ( lista : list<'a>) (obje:'a) =
+        let length = lista.Length
+        if ind >= length then -1 elif (lista.Item ind).Equals(obje) then ind else GetIndex (ind+1) lista obje
+    
+let Remove (listaOrig ) (s) =
+        let ind = GetIndex 0 listaOrig s
+        if ind <> -1 then
+            let mutable newl = []
+            for index = 0 to ind-1 do
+                newl <- AddToList newl (listaOrig.Item index)
+            for index = ind+1 to listaOrig.Length-1 do
+                newl <- AddToList newl (listaOrig.Item index)
+            newl
+            else listaOrig
+
 //working with the player
 type Player(name :string) =
     let mutable Positionx = 1
@@ -10,22 +26,6 @@ type Player(name :string) =
     let mutable Inventory = []
     let rec Contains (lista : list<string>) (x : string) =
         if lista.IsEmpty then false elif lista.Head.Equals(x) then true else Contains lista.Tail x
-    let rec GetIndex (ind :int) ( lista: list<string>) (obje:string) =
-        let length = lista.Length
-        if ind >= length then -1 elif (lista.Item ind).Equals(obje) then ind else GetIndex (ind+1) lista obje
-    let rec AddToList (lst : list<string>) (s:string)=
-       s::lst
-    
-    let Remove (listaOrig : list<string>) (s: string) =
-        let ind = GetIndex 0 listaOrig s
-        if ind <> -1 then
-            let mutable newl = []
-            for index = 0 to ind-1 do
-                newl <- AddToList newl (listaOrig.Item index)
-            for index = ind+1 to listaOrig.Length-1 do
-                newl <- AddToList newl (listaOrig.Item index)
-            newl
-            else listaOrig
 
     member this.Initialize(x : int, y: int)=
         Positionx <- x
@@ -38,6 +38,8 @@ type Player(name :string) =
     member this.Def = Defense
     member this.LevelUp =
       let a = Level+1
+      Attack <- Attack * 15/10
+      Defense <- Defense * 15/10
       Level <- a
     
     member this.HealthLevel = Health
@@ -72,11 +74,14 @@ type CraftedObject(Name: string, Recipe : string list) =
     member this.Recipe = Recipe
     override this.ToString() =  Name
     
-
 //working with the maze now
 type Cell = Wall | Open | Chest | Monster | Boss | Fountain 
-
 let Resources = ["Coal"; "Stick"; "Wood";"Stone";"Iron";"Gold";"RedStone";"Diamond";"Netherite";"Obsidian";"Emerald";"Copper";"Sand"; "Wool"]
+let mutable Crafts: CraftedObject list = []
+
+//let InitializeCrafts() = 
+    //read txt Format: <Craft Name> = <Resource>,<Resource>,<Resource>,..., <Resource>#
+
 let mutable dimension = 15
 let GetRandom x = 
     let rnd = new Random()

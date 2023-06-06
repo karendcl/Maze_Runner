@@ -75,7 +75,7 @@ type Player(name :string) =
     member this.AddToInventory x = 
         Inventory <- AddToList Inventory x
             
-    member this.RemoveFromInventory x = RemoveOnce Inventory [] x false  
+    member this.RemoveFromInventory x = Inventory <- RemoveOnce Inventory [] x false  
 
     member this.MoveX steps = Positionx <- Positionx + steps
 
@@ -95,6 +95,24 @@ type CraftedObject(Name: string, Recipe : string list) =
     member this.Name = Name
     member this.Recipe = Recipe
     override this.ToString() =  Name
+
+let rec PrintMenuWithOptions (header : string)(a : list<'a>) (ind :int)=
+    Console.Clear()
+    Console.WriteLine(header)
+
+    let mutable ind2 = ind
+    if ind < 0 then ind2 <- a.Length-1 elif ind > a.Length-1 then ind2 <- 0 else ind2 <- ind
+
+    for i in [0..a.Length-1] do 
+        if i.Equals(ind2) then Console.WriteLine("---> " + (a.Item i).ToString())
+        else Console.WriteLine( (a.Item i).ToString())
+    
+    let k = Console.ReadKey().Key
+    match k with
+    | ConsoleKey.DownArrow -> PrintMenuWithOptions header a (ind2+1)
+    | ConsoleKey.UpArrow -> PrintMenuWithOptions header a (ind2-1)
+    | ConsoleKey.Enter -> ind2
+    | _ -> PrintMenuWithOptions header a ind2
     
 //working with the maze now
 type Cell = Wall | Open | Chest | Monster | Boss | Fountain 
@@ -153,8 +171,6 @@ let ValidMove xchange ychange (player: Player) =
 
         not(newpos1 < 0 || newpos2<0 || newpos1 >= dimension || newpos2>=dimension || maze[newpos2,newpos1] = Cell.Wall) 
 
-
-//getting input from user
 let MovePlayer (x:int)  (y:int) (jugador:Player) =
     jugador.MoveX x
     jugador.MoveY y
@@ -163,14 +179,35 @@ let PrintCraftMenu (player:Player) =
     Console.Clear()
     if not player.InventoryCopy.IsEmpty 
         then
-        Console.WriteLine("The player's Inventory: ")
-        for i in player.InventoryCopy do Console.Write(i.ToString())
-        Console.WriteLine("\n\n\n These are the possible crafts:")
-        for i in [0..Crafts.Length-1] do Console.WriteLine("\t ["+i.ToString()+"] \t" + (Crafts.Item i).ToString())
+        let mutable header = ""
+        header <- header + "The player's Inventory"
+        for i in player.InventoryCopy do header <- header + "\n\t" + i.ToString()
+        header <- header + "\n\n\n These are the possible crafts:"
+        let indexofcraft = PrintMenuWithOptions header Crafts 0
+        (indexofcraft, true)
+        
+    else
+        Console.WriteLine("You do not have anything in your inventory. Get To Work! \n\n Press Any to Continue")
+        let a = Console.ReadKey()
+        (-1, false)
+        
+let rec CheckForRecipe (inventoryLst: list<'a>) (recipeLeft :list<'a>)=
+    if recipeLeft.Length.Equals(0) then true
+    else
+        let a = recipeLeft.Head
+        if Contains inventoryLst a 
+            then
+                CheckForRecipe (RemoveOnce inventoryLst [] a false) recipeLeft.Tail 
+            else false
+let TryCraft (player:Player) (obje: CraftedObject) =
+    if CheckForRecipe player.InventoryCopy obje.Recipe then
+        for i in obje.Recipe do player.RemoveFromInventory i
+        player.AddToInventory obje.Name
+
 
 let Craft (player : Player) = 
-    PrintCraftMenu player
-    Thread.Sleep(10000)
+    let (ind, bo) = PrintCraftMenu player
+    if bo.Equals(true) then TryCraft player (Crafts.Item ind)
     
 
 let GetDirection (keyPressed: ConsoleKey) (player : Player)=

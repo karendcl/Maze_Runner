@@ -1,5 +1,9 @@
 ﻿open System
 open System.IO
+open System.Threading
+
+
+//Some Methods For Lists
 let rec AddToList (lst) (s)= s::lst
 let rec GetIndex (ind :int) ( lista : list<'a>) (obje:'a) =
         let length = lista.Length
@@ -8,6 +12,7 @@ let rec GetIndex (ind :int) ( lista : list<'a>) (obje:'a) =
 let rec RemoveOnce (listaorig : list<'a>) (listares : list<'a>) (item :'a) (found : bool)=
     let a = listaorig.Head
     let b = listaorig.Tail
+
     //si la lista original esta vacia no hay mas que hacer
     if listaorig.Length.Equals(0) then listares
     //si ya se encontro se copia lo que resta
@@ -17,17 +22,20 @@ let rec RemoveOnce (listaorig : list<'a>) (listares : list<'a>) (item :'a) (foun
         if listaorig.Head.Equals(item) then RemoveOnce b listares item true
         else RemoveOnce b (a::listares) item false
 
-
-let rec FromArrayToList (lst : list<'a>) (ar : array<'a>) (ind : int)=
-    if ind < 0 
-        then lst 
+let rec FromArrayToList (lst : list<'a>) (ar : array<'a>) (ind  : int)=
+    if ind < 0 then lst 
     else FromArrayToList (ar.[ind]::lst) (ar) (ind-1) 
 
 let rec Contains (lista : list<'a>) (x : 'a) =
         if lista.IsEmpty then false elif lista.Head.Equals(x) then true else Contains lista.Tail x
 
-  
+let rec Clone (listorig : list<'a>) (listres:list<'a>) = 
 
+    if listorig.Length.Equals(0) then listres
+    else 
+    let a = listorig.Head
+    let b = listorig.Tail
+    Clone (b) (a::listres)
 
 //working with the player
 type Player(name :string) =
@@ -70,6 +78,9 @@ type Player(name :string) =
     member this.RemoveFromInventory x = RemoveOnce Inventory [] x false  
 
     member this.MoveX steps = Positionx <- Positionx + steps
+
+    member this.InventoryCopy = Clone Inventory [] 
+
     override this.ToString() = 
         let mutable inv = ""
         for (i:string) in Inventory do
@@ -80,7 +91,6 @@ type Player(name :string) =
         "Health: " + Health.ToString() + "\n" + 
         "Inventario: " + "\n" + inv + "\n"
 
-       
 type CraftedObject(Name: string, Recipe : string list) = 
     member this.Name = Name
     member this.Recipe = Recipe
@@ -149,6 +159,19 @@ let MovePlayer (x:int)  (y:int) (jugador:Player) =
     jugador.MoveX x
     jugador.MoveY y
 
+let PrintCraftMenu (player:Player) = 
+    Console.Clear()
+    if not player.InventoryCopy.IsEmpty 
+        then
+        Console.WriteLine("The player's Inventory: ")
+        for i in player.InventoryCopy do Console.Write(i.ToString())
+        Console.WriteLine("\n\n\n These are the possible crafts:")
+        for i in [0..Crafts.Length-1] do Console.WriteLine("\t ["+i.ToString()+"] \t" + (Crafts.Item i).ToString())
+
+let Craft (player : Player) = 
+    PrintCraftMenu player
+    Thread.Sleep(10000)
+    
 
 let GetDirection (keyPressed: ConsoleKey) (player : Player)=
     match keyPressed with
@@ -156,7 +179,7 @@ let GetDirection (keyPressed: ConsoleKey) (player : Player)=
     | ConsoleKey.DownArrow -> if (ValidMove 0 1 player) then (MovePlayer 0 1 player)
     | ConsoleKey.RightArrow -> if (ValidMove 1 0  player) then (MovePlayer 1 0 player)
     | ConsoleKey.LeftArrow -> if (ValidMove -1 0  player) then (MovePlayer -1 0 player)
-    //| ConsoleKey.C -> Craft player
+    | ConsoleKey.C -> Craft player
     | _ -> MovePlayer 0 0 player 
 
 let FoundChest (jugador:Player)=
@@ -217,8 +240,7 @@ let InitialLoop =
     player.Initialize(1,1)
     InitializeCrafts()
 
-    for i in Crafts do
-        Console.WriteLine(i.ToString())
+    
 
 
     let mutable k = ConsoleKey.A

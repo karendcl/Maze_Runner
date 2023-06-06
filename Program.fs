@@ -74,7 +74,12 @@ type Player() =
             
     member this.RemoveFromInventory x = Remove Inventory x  
 
-   
+type CraftedObject(Name: string, Recipe : string list) = 
+    member this.Name = Name
+    member this.Recipe = Recipe
+    override this.ToString() =  Name
+    
+
 //working with the maze now
 type Cell = Wall | Open | Chest | Monster | Boss | Fountain 
 

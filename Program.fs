@@ -4,24 +4,27 @@ let rec AddToList (lst) (s)= s::lst
 let rec GetIndex (ind :int) ( lista : list<'a>) (obje:'a) =
         let length = lista.Length
         if ind >= length then -1 elif (lista.Item ind).Equals(obje) then ind else GetIndex (ind+1) lista obje
-    
-let Remove (listaOrig ) (s) =
-        let ind = GetIndex 0 listaOrig s
-        if ind <> -1 then
-            let mutable newl = []
-            for index = 0 to ind-1 do
-                newl <- AddToList newl (listaOrig.Item index)
-            for index = ind+1 to listaOrig.Length-1 do
-                newl <- AddToList newl (listaOrig.Item index)
-            newl
-            else listaOrig
+
+let rec RemoveOnce (listaorig : list<'a>) (listares : list<'a>) (item :'a) (found : bool)=
+    let a = listaorig.Head
+    let b = listaorig.Tail
+    //si la lista original esta vacia no hay mas que hacer
+    if listaorig.Length.Equals(0) then listares
+    //si ya se encontro se copia lo que resta
+    elif found.Equals(true) 
+        then RemoveOnce b (a::listares) item true
+    else
+        if listaorig.Head.Equals(item) then RemoveOnce b listares item true
+        else RemoveOnce b (a::listares) item false
 
 
 let rec FromArrayToList (lst : list<'a>) (ar : array<'a>) (ind : int)=
-    if ind.Equals(-1) 
+    if ind < 0 
         then lst 
     else FromArrayToList (ar.[ind]::lst) (ar) (ind-1) 
 
+let rec Contains (lista : list<'a>) (x : 'a) =
+        if lista.IsEmpty then false elif lista.Head.Equals(x) then true else Contains lista.Tail x
 
   
 
@@ -35,8 +38,6 @@ type Player(name :string) =
     let mutable Level = 1
     let mutable Health = 300
     let mutable Inventory = []
-    let rec Contains (lista : list<string>) (x : string) =
-        if lista.IsEmpty then false elif lista.Head.Equals(x) then true else Contains lista.Tail x
 
     member this.Initialize(x : int, y: int)=
         Positionx <- x
@@ -66,7 +67,7 @@ type Player(name :string) =
     member this.AddToInventory x = 
         Inventory <- AddToList Inventory x
             
-    member this.RemoveFromInventory x = Remove Inventory x  
+    member this.RemoveFromInventory x = RemoveOnce Inventory [] x false  
 
     member this.MoveX steps = Positionx <- Positionx + steps
     override this.ToString() = 
@@ -79,7 +80,7 @@ type Player(name :string) =
         "Health: " + Health.ToString() + "\n" + 
         "Inventario: " + "\n" + inv + "\n"
 
-       //let str = " Nombre: %s, Posicion: %i, %i, Health: %i, Inventario: %s items: %i" this.name Positionx Positiony Health PrintInventory Inventory.Length
+       
 type CraftedObject(Name: string, Recipe : string list) = 
     member this.Name = Name
     member this.Recipe = Recipe

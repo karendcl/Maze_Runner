@@ -115,25 +115,24 @@ type Player(name :string) =
 
     member this.InventoryCopy = Clone Inventory [] 
 
-    //static method to print inventory grouped
+    member this.InventoryPrint() = 
+        let a = GroupBy Inventory
+        let rec CreateString (a : list<string * int>) (res : string) =
+            if a.Length.Equals(0) then res
+            else
+                let b = a.Head
+                let c = fst(b)
+                let d = snd(b)
+                CreateString a.Tail (res + c + " x" + d.ToString() + "\n\t") 
+        CreateString a "\t"
 
     override this.ToString() = 
-        let mutable inv = ""
-        for i in GroupBy Inventory do
-            inv <- inv + fst(i) + " x" + snd(i).ToString() + "\n"
+        let inv = this.InventoryPrint()
         
-        
-
         "Nombre: " + name + "\n" + 
         "Posicion: " + Positionx.ToString() + " " + Positiony.ToString() + "\n" + 
         "Health: " + Health.ToString() + "\n" + 
         "Inventario: " + "\n" + inv + "\n"
-
-    // static member PrintInventory() = 
-    //     let mutable inv = ""
-    //     for i in GroupBy Inventory do
-    //         inv <- inv + fst(i) + " x" + snd(i).ToString() + "\n"
-    //     inv
 
 type CraftedObject(Name: string, Recipe : string list) = 
     member this.Name = Name
@@ -172,10 +171,42 @@ let rec PrintMenuWithOptions (header : string)(a : list<'a>) (ind :int)=
 //working with the maze now
 type Cell = Wall | Open | Chest | Monster | Boss | Fountain 
 
+let mutable dimension = 15
+
+let GetRandom x = 
+    let rnd = new Random()
+    rnd.Next(x)
+
+
+let casilla_thing x y =
+    let i = GetRandom 7
+
+    match i with
+    | 0 -> Cell.Wall
+    | 4 -> Cell.Wall
+    | 1 -> Cell.Chest
+    | 2 -> Cell.Fountain
+    | 3 -> Cell.Monster
+    | _ -> Cell.Open
+
+
+let mutable maze = Array2D.init dimension dimension (casilla_thing)
+
+
+let casilla_bool x y =
+    let thing = maze[x,y]
+    match thing with
+    | Cell.Wall -> false
+    | Cell.Boss -> false
+    | _ -> true
+
+
+let mutable MazeMask = Array2D.init dimension dimension ( casilla_bool )
 //add a ToString method to the cell type
+
 let ToStringC (c : Cell) = 
     match c with
-    | Wall -> "*"
+    | Wall -> "▀"
     | Open -> " "
     | Chest -> "C"
     | Monster -> "M"
@@ -220,37 +251,6 @@ let InitializeCrafts() =
     let AllRecipes = readlines filepath
     for i in AllRecipes do CreateCraftedObject i
 
-let mutable dimension = 15
-
-let GetRandom x = 
-    let rnd = new Random()
-    rnd.Next(x)
-
-
-let casilla_thing x y =
-    let i = GetRandom 7
-
-    match i with
-    | 0 -> Cell.Wall
-    | 4 -> Cell.Wall
-    | 1 -> Cell.Chest
-    | 2 -> Cell.Fountain
-    | 3 -> Cell.Monster
-    | _ -> Cell.Open
-
-
-let mutable maze = Array2D.init dimension dimension (casilla_thing)
-
-
-let casilla_bool x y =
-    let thing = maze[x,y]
-    match thing with
-    | Cell.Wall -> false
-    | Cell.Boss -> false
-    | _ -> true
-
-
-let mutable MazeMask = Array2D.init dimension dimension ( casilla_bool )
 
 
 let ValidMove xchange ychange (player: Player) = 
@@ -271,7 +271,7 @@ let PrintCraftMenu (player:Player) =
         then
         let mutable header = ""
         header <- header + "The player's Inventory"
-        for i in player.InventoryCopy do header <- header + "\n\t" + i.ToString()
+        header <- header + player.InventoryPrint()
         header <- header + "\n\n\n These are the possible crafts:"
         let indexofcraft = PrintMenuWithOptions header Crafts 0
         (indexofcraft, true)
@@ -282,17 +282,18 @@ let PrintCraftMenu (player:Player) =
         (-1, false) 
 
 
-let rec CheckForRecipe (inventoryLst: list<'a>) (recipeLeft :list<'a>)=
-    if recipeLeft.Length.Equals(0) then true
-    else
-        let a = recipeLeft.Head
-        if Contains inventoryLst a 
-            then
-                CheckForRecipe (Remove inventoryLst a ) recipeLeft.Tail 
-            else false
 
 
 let TryCraft (player:Player) (obje: CraftedObject) =
+    let rec CheckForRecipe (inventoryLst: list<'a>) (recipeLeft :list<'a>)=
+        if recipeLeft.Length.Equals(0) then true
+        else
+            let a = recipeLeft.Head
+            if Contains inventoryLst a 
+                then
+                    CheckForRecipe (Remove inventoryLst a ) recipeLeft.Tail 
+                else false
+
     if CheckForRecipe player.InventoryCopy obje.Recipe then
         for i in obje.Recipe do player.RemoveFromInventory i
         player.AddToInventory obje.Name
@@ -301,7 +302,8 @@ let TryCraft (player:Player) (obje: CraftedObject) =
 let Craft (player : Player) = 
     let (ind, bo) = PrintCraftMenu player
     if bo.Equals(true) then TryCraft player (Crafts.Item ind)
-    
+
+
 
 let GetDirection (keyPressed: ConsoleKey) (player : Player)=
     match keyPressed with
@@ -310,6 +312,7 @@ let GetDirection (keyPressed: ConsoleKey) (player : Player)=
     | ConsoleKey.RightArrow -> if (ValidMove 1 0  player) then (MovePlayer 1 0 player)
     | ConsoleKey.LeftArrow -> if (ValidMove -1 0  player) then (MovePlayer -1 0 player)
     | ConsoleKey.C -> Craft player
+
     | _ -> MovePlayer 0 0 player 
 
 
@@ -358,7 +361,7 @@ let rec PrintRow (row : array<'a>) (res : string) (ind : int)=
         let b = res + a.ToString() + " "
         PrintRow row b (ind+1)
     
-// let rec PrintMatrix (matrix : <'a>) (res : string) (ind : int) =
+// let rec PrintMatrix (matrix) (res : string) (ind : int) =
 //     if ind.Equals(matrix.GetLength(0)) then res
 //     else 
 //         let a = matrix.[ind,0]
@@ -388,9 +391,11 @@ let InitialLoop =
     //add a group by for inventory
 
     Console.Clear()
+
     let player = new Player("Karen")
     player.Initialize(1,1)
     InitializeCrafts()
+    InteractWithMaze player 
 
 
     let mutable k = ConsoleKey.A

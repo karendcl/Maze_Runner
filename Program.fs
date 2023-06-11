@@ -19,7 +19,6 @@ let Remove (lista: list<'a>) (item:'a) =
     
     RemoveOnce lista [] item false
 
-
 let rec Contains (lista : list<'a>) (x : 'a) =
         if lista.IsEmpty then false elif lista.Head.Equals(x) then true else Contains lista.Tail x
 
@@ -59,16 +58,51 @@ let GroupBy (lista : list<'a>) =
     
     GroupByAll lista [] 
 
-
-let rec GetIndex (ind :int) ( lista : list<'a>) (obje:'a) =
+let IndexOf (objeto:'a) (lst :list<'a>) =     
+    let rec GetIndex (ind :int) ( lista : list<'a>) (obje:'a) =
         let length = lista.Length
         if ind >= length then -1 elif (lista.Item ind).Equals(obje) then ind else GetIndex (ind+1) lista obje
+    GetIndex 0 lst objeto
+
+let Reverse (lst :list<'a>) = 
+    let rec Rev acc = function
+        |[] -> acc
+        | head ::tail -> Rev (head::acc) tail
+    
+    Rev [] lst
+
+let Enqueue (q : list<'a>) (item:'a) = 
+    Reverse (AddToList (Reverse q) item)
+    
+let Dequeue (lst : list<'a>) = lst.Tail
+
+type Inventory() = 
+    let mutable Inv = []
+
+    member this.AddToInventory( obje ) = 
+        Inv <- AddToList Inv obje
+    
+    member this.RemoveFromInventory(a)=
+        Inv <- Remove Inv a
+    
+    member this.HasInInventory(a)=
+        Contains Inv a
+
+    member this.Clone() = 
+        Clone Inv []
+
+    override this.ToString() = 
+        let a = GroupBy Inv
+        let rec CreateString (a : list<string * int>) (res : string) =
+            if a.Length.Equals(0) then res
+            else
+                let b = a.Head
+                let c = fst(b)
+                let d = snd(b)
+                CreateString a.Tail (res + c + " x" + d.ToString() + "\n\t") 
+        CreateString a "\t"
 
 
-
-
-///Removes one occurrence of the item
-///Send the bool as false
 
 
 //working with the player
@@ -79,7 +113,8 @@ type Player(name :string) =
     let mutable Defense = 200
     let mutable Level = 1
     let mutable Health = 300
-    let mutable Inventory = []
+    let mutable MaxHealth = 300
+    let mutable Inventory = new Inventory()
 
     member this.Initialize(x : int, y: int)=
         Positionx <- x
@@ -95,44 +130,39 @@ type Player(name :string) =
       Attack <- Attack * 15/10
       Defense <- Defense * 15/10
       Level <- a
+      MaxHealth <- MaxHealth + 100
+
+    member this.ResetHealth() = 
+        Health <- MaxHealth
     
+    member this.ShowInventory() = 
+        Inventory.ToString()
     member this.HealthLevel = Health
     member this.Damage a = 
         let h = Health - a
         Health <- h
     member this.RegenerateHealth a = 
         let h = Health + a
-        Health <- h
+        if h > MaxHealth then Health <- MaxHealth else Health <- h
     
-    member this.HasObject x many = Contains Inventory x 
 
     member this.AddToInventory x = 
-        Inventory <- AddToList Inventory x
+        Inventory.AddToInventory x
             
-    member this.RemoveFromInventory x = Inventory <- Remove Inventory x   
+    member this.RemoveFromInventory x = Inventory.RemoveFromInventory x  
 
     member this.MoveX steps = Positionx <- Positionx + steps
 
-    member this.InventoryCopy = Clone Inventory [] 
-
-    member this.InventoryPrint() = 
-        let a = GroupBy Inventory
-        let rec CreateString (a : list<string * int>) (res : string) =
-            if a.Length.Equals(0) then res
-            else
-                let b = a.Head
-                let c = fst(b)
-                let d = snd(b)
-                CreateString a.Tail (res + c + " x" + d.ToString() + "\n\t") 
-        CreateString a "\t"
+    member this.InventoryCopy = Inventory.Clone()
 
     override this.ToString() = 
-        let inv = this.InventoryPrint()
+        let inv = Inventory.ToString()
         
         "Nombre: " + name + "\n" + 
         "Posicion: " + Positionx.ToString() + " " + Positiony.ToString() + "\n" + 
         "Health: " + Health.ToString() + "\n" + 
         "Inventario: " + "\n" + inv + "\n"
+
 
 type CraftedObject(Name: string, Recipe : string list) = 
     member this.Name = Name
@@ -192,6 +222,8 @@ let casilla_thing x y =
 
 let mutable maze = Array2D.init dimension dimension (casilla_thing)
 
+let mutable Bossx = 0
+let mutable Bossy = 0
 
 let casilla_bool x y =
     let thing = maze[x,y]
@@ -202,6 +234,50 @@ let casilla_bool x y =
 
 
 let mutable MazeMask = Array2D.init dimension dimension ( casilla_bool )
+
+let ResetBoolMaze() = 
+    MazeMask <- Array2D.init dimension dimension (casilla_bool)
+
+let GetInt (question : string)= 
+    let rec G (question:string) (ind:int) = 
+        Console.Clear()
+        Console.WriteLine(question)
+
+        if (ind<0) then G question 0 else
+
+        Console.Write(ind)
+        let k = Console.ReadKey().Key
+
+        match k with
+        | ConsoleKey.UpArrow -> G question (ind+1)
+        | ConsoleKey.DownArrow -> G question (ind-1)
+        | ConsoleKey.Enter -> ind
+        |_ -> G question ind
+
+    G question 0
+
+
+let GenerateNewMaze()=
+
+    dimension <- GetInt "Seleccione la dimension de su laberinto. Use las flechitas \n\n"
+    let mutable a = Array2D.init dimension dimension (casilla_thing)
+    Bossx <- GetRandom dimension
+    Bossy <- GetRandom dimension
+
+    let mutable k = true
+
+    while k do
+        match a[Bossy,Bossx] with
+            |Cell.Wall ->  Bossx <- GetRandom dimension
+                           Bossy <- GetRandom dimension
+            |_ -> k<-false
+
+    a[Bossy,Bossx] <- Cell.Boss
+    maze <- a
+
+    ResetBoolMaze()
+
+
 //add a ToString method to the cell type
 
 let ToStringC (c : Cell) = 
@@ -252,12 +328,21 @@ let InitializeCrafts() =
     for i in AllRecipes do CreateCraftedObject i
 
 
+let EndGame (k: ConsoleKey) (player:Player)=
+    if k.Equals(ConsoleKey.Escape) then 1
+    else if player.HealthLevel <= 0 then 2
+    else if maze[player.YPos, player.Xpos].Equals(Cell.Boss) then 3
+    else 4
+
+let ValidPosition x y = 
+        not(x < 0 || y<0 || x >= dimension || y>=dimension || maze[y,x] = Cell.Wall) 
 
 let ValidMove xchange ychange (player: Player) = 
         let newpos1 = player.Xpos + xchange
         let newpos2 = player.YPos + ychange
 
-        not(newpos1 < 0 || newpos2<0 || newpos1 >= dimension || newpos2>=dimension || maze[newpos2,newpos1] = Cell.Wall) 
+        ValidPosition newpos1 newpos2
+
 
 
 let MovePlayer (x:int)  (y:int) (jugador:Player) =
@@ -267,17 +352,17 @@ let MovePlayer (x:int)  (y:int) (jugador:Player) =
 
 let PrintCraftMenu (player:Player) = 
     Console.Clear()
-    if not player.InventoryCopy.IsEmpty 
+    if not (player.InventoryCopy.IsEmpty) 
         then
         let mutable header = ""
         header <- header + "The player's Inventory"
-        header <- header + player.InventoryPrint()
+        header <- header + player.ShowInventory()
         header <- header + "\n\n\n These are the possible crafts:"
         let indexofcraft = PrintMenuWithOptions header Crafts 0
         (indexofcraft, true)
         
     else
-        Console.WriteLine("You do not have anything in your inventory. Get To Work! \n\n Press Any to Continue")
+        Console.WriteLine("You do not have anything in your inventory. Get To Work! \n\n Press Any Key to Continue")
         let a = Console.ReadKey()
         (-1, false) 
 
@@ -303,7 +388,7 @@ let Craft (player : Player) =
     let (ind, bo) = PrintCraftMenu player
     if bo.Equals(true) then TryCraft player (Crafts.Item ind)
 
-
+    
 
 let GetDirection (keyPressed: ConsoleKey) (player : Player)=
     match keyPressed with
@@ -339,6 +424,60 @@ let FightMonster (jugador:Player) =
    if d>0 then jugador.Damage absd else WonMonsterFight jugador absd
 
 
+let rec CanReachBoss() =
+    let dx = [|0;0;1;-1|]
+    let dy = [|1;-1;0;0|]
+
+    let mutable mask = Array2D.init dimension dimension casilla_bool
+
+    let BFS(x:int,y:int) = 
+        let mutable q = []
+        let mutable visited = []
+        q <- Enqueue q (x,y)
+
+        while not(q.IsEmpty) do
+            visited <-AddToList visited q.Head
+
+            for i in [0..3] do
+                let mutable xn = fst(q.Head) + dx.[i]
+                let mutable yn = snd(q.Head) + dy.[i]
+                if (ValidPosition xn yn) && (mask[yn,xn]) then
+                    q <- Enqueue q (xn,yn)
+                    mask[yn,xn] <- false
+                    Console.WriteLine(q)
+            
+            q <- Dequeue q 
+            
+        
+        visited
+    
+    let visited = BFS (Bossx,Bossy)
+    if visited.Length <=10 then 
+        GenerateNewMaze()
+        CanReachBoss()
+    else
+    let ran1 = GetRandom visited.Length
+    visited.Item ran1
+
+
+
+
+    
+
+
+
+
+let FightBoss (jugador : Player) = 
+    let MonsterAtk = GetRandom jugador.Atk * 2
+    let MonsterDef = GetRandom jugador.Def * 2
+    let d = MonsterAtk + MonsterDef - jugador.Def - jugador.Atk
+    let absd = abs d
+    if d>0 then jugador.Damage absd else WonMonsterFight jugador absd
+
+
+let FoundFountain (jugador:Player) =
+    jugador.ResetHealth() 
+
 let InteractWithMaze (jugador:Player)  =
     let a = jugador.Xpos
     let b = jugador.YPos
@@ -350,16 +489,18 @@ let InteractWithMaze (jugador:Player)  =
         match thing with
         | Cell.Monster -> FightMonster jugador
         | Cell.Chest -> FoundChest jugador
+        | Cell.Boss -> FightBoss jugador
+        | Cell.Fountain -> FoundFountain jugador
         | _ -> MovePlayer 0 0 jugador
     else MovePlayer 0 0 jugador
 
 
-let rec PrintRow (row : array<'a>) (res : string) (ind : int)=
-    if ind.Equals(row.Length) then res
-    else 
-        let a = row.[ind]
-        let b = res + a.ToString() + " "
-        PrintRow row b (ind+1)
+// let rec PrintRow (row : array<'a>) (res : string) (ind : int)=
+//     if ind.Equals(row.Length) then res
+//     else 
+//         let a = row.[ind]
+//         let b = res + a.ToString() + " "
+//         PrintRow row b (ind+1)
     
 // let rec PrintMatrix (matrix) (res : string) (ind : int) =
 //     if ind.Equals(matrix.GetLength(0)) then res
@@ -370,11 +511,13 @@ let rec PrintRow (row : array<'a>) (res : string) (ind : int)=
 //         PrintMatrix matrix c (ind+1)
 
 
-let PrintMaze() =
+let PrintMaze(player:Player) =
     for i in [0..maze.GetLength(0)-1] do
         Console.WriteLine()
         for j in [0..maze.GetLength(1)-1] do
-            Console.Write(" " + ToStringC(maze[i,j]))
+            if not (player.YPos.Equals(i) && player.Xpos.Equals(j)) then
+                Console.Write(" " + ToStringC(maze[i,j]))
+            else Console.Write(" ♫")
 
 
 let PrintBoolMaze() =
@@ -383,36 +526,61 @@ let PrintBoolMaze() =
         for j in [0..MazeMask.GetLength(1)-1] do
             Console.Write(" " + MazeMask[i,j].ToString())
 
+let PlacePlayer(player:Player) = 
+    let (x,y) = CanReachBoss() 
+    player.Initialize(x,y)
 
-let InitialLoop = 
 
-    //get random drop points for player while its not a valid starting point
-    //check with bfs that its a valid maze
-    //add a group by for inventory
+
+let SetUpPlayer() = 
+    let player = new Player("")
+    PlacePlayer player
+
+    Console.Write("Please write the name of your player: \n\n\t --> ")
+    let name = Console.ReadLine()
+
+    player
+let rec InitialLoop() = 
+
+    //set fountains
 
     Console.Clear()
+    GenerateNewMaze()
 
-    let player = new Player("Karen")
-    player.Initialize(1,1)
+    let player = SetUpPlayer()
+
     InitializeCrafts()
     InteractWithMaze player 
 
-
     let mutable k = ConsoleKey.A
-    while not (k.Equals(ConsoleKey.Escape)) do
+    while  ((EndGame k player).Equals(4)) do
         Console.WriteLine(player.ToString())
-        PrintMaze()
+        PrintMaze(player)
         Console.WriteLine()
-        PrintBoolMaze()
+        //PrintBoolMaze()
         k <- Console.ReadKey(false).Key
         GetDirection k player
         InteractWithMaze player 
         Console.Clear()
 
+    Console.WriteLine(player.ToString() + "\n\n")
+
+    match EndGame k player with
+    |1 -> Console.WriteLine("You pressed Escape!")
+    |2 -> Console.WriteLine("You are dead!")
+    |3-> Console.WriteLine("You have won!")
+    |_ -> Console.WriteLine("Bug?")
+
+    Thread.Sleep(1000)
+
+    let question = "Wanna Play Again?"
+    let opt = ["Yes";"No"]
+    let ans = PrintMenuWithOptions question opt 0
+    if ans.Equals(0) then InitialLoop()
 
 [<EntryPoint>]
 let main args = 
-    InitialLoop
+    InitialLoop()
     1
 
 

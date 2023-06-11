@@ -409,16 +409,18 @@ let FoundChest (jugador:Player)=
 
 
 let WonMonsterFight (jugador:Player) (damage:int) =
-    jugador.RegenerateHealth damage
+    jugador.Damage damage
     let b = GetRandom 2
     match b with
     |0 -> MovePlayer 0 0 jugador
     |_ -> FoundChest jugador
 
 
-let FightMonster (jugador:Player) = 
-   let MonsterAtk = GetRandom jugador.Atk * 2
-   let MonsterDef = GetRandom jugador.Def * 2
+let FightMonster (jugador:Player) (boss:bool)= 
+   let factor = 
+        if boss then 3 else 2 
+   let MonsterAtk = GetRandom jugador.Atk * factor
+   let MonsterDef = GetRandom jugador.Def * factor
    let d = MonsterAtk + MonsterDef - jugador.Def - jugador.Atk
    let absd = abs d
    if d>0 then jugador.Damage absd else WonMonsterFight jugador absd
@@ -444,7 +446,6 @@ let rec CanReachBoss() =
                 if (ValidPosition xn yn) && (mask[yn,xn]) then
                     q <- Enqueue q (xn,yn)
                     mask[yn,xn] <- false
-                    Console.WriteLine(q)
             
             q <- Dequeue q 
             
@@ -460,21 +461,6 @@ let rec CanReachBoss() =
     visited.Item ran1
 
 
-
-
-    
-
-
-
-
-let FightBoss (jugador : Player) = 
-    let MonsterAtk = GetRandom jugador.Atk * 2
-    let MonsterDef = GetRandom jugador.Def * 2
-    let d = MonsterAtk + MonsterDef - jugador.Def - jugador.Atk
-    let absd = abs d
-    if d>0 then jugador.Damage absd else WonMonsterFight jugador absd
-
-
 let FoundFountain (jugador:Player) =
     jugador.ResetHealth() 
 
@@ -487,28 +473,12 @@ let InteractWithMaze (jugador:Player)  =
     if NewPosition then
         MazeMask[b,a] <- false
         match thing with
-        | Cell.Monster -> FightMonster jugador
+        | Cell.Monster -> FightMonster jugador false
         | Cell.Chest -> FoundChest jugador
-        | Cell.Boss -> FightBoss jugador
+        | Cell.Boss -> FightMonster jugador true
         | Cell.Fountain -> FoundFountain jugador
         | _ -> MovePlayer 0 0 jugador
     else MovePlayer 0 0 jugador
-
-
-// let rec PrintRow (row : array<'a>) (res : string) (ind : int)=
-//     if ind.Equals(row.Length) then res
-//     else 
-//         let a = row.[ind]
-//         let b = res + a.ToString() + " "
-//         PrintRow row b (ind+1)
-    
-// let rec PrintMatrix (matrix) (res : string) (ind : int) =
-//     if ind.Equals(matrix.GetLength(0)) then res
-//     else 
-//         let a = matrix.[ind,0]
-//         let b = PrintRow a "" 0
-//         let c = res + b + "\n"
-//         PrintMatrix matrix c (ind+1)
 
 
 let PrintMaze(player:Player) =
@@ -557,7 +527,6 @@ let rec InitialLoop() =
         Console.WriteLine(player.ToString())
         PrintMaze(player)
         Console.WriteLine()
-        //PrintBoolMaze()
         k <- Console.ReadKey(false).Key
         GetDirection k player
         InteractWithMaze player 

@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Lists.fs" />
+    <Compile Include="Inventory.fs" />
+    <Compile Include="Player.fs" />
+    <Compile Include="CraftedObject.fs" />
+    <Compile Include="Cell.fs" />
+    <Compile Include="Maze.fs" />
+    <Compile Include="Printing.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

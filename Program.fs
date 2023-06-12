@@ -30,9 +30,17 @@ let rec Clone (listorig : list<'a>) (listres:list<'a>) =
     let b = listorig.Tail
     Clone (b) (a::listres)
 
-let rec FromArrayToList (lst : list<'a>) (ar : array<'a>) (ind  : int)=
-        if ind < 0 then lst 
-        else FromArrayToList (ar.[ind]::lst) (ar) (ind-1)
+let FromListToArray (lst : list<'a>) = 
+    let rec FromListToArray (lst : list<'a>) (ar : array<'a>) (ind  : int)=
+            if ind < 0 then ar 
+            else FromListToArray (lst.Tail) (ar.[ind] <- lst.Head; ar) (ind-1)
+    FromListToArray lst (Array.zeroCreate lst.Length) (lst.Length-1)
+
+let FromArrayToList (ar: array<'a>) =
+    let rec FromArrayToList (lst : list<'a>) (ar : array<'a>) (ind  : int)=
+            if ind < 0 then lst 
+            else FromArrayToList (ar.[ind]::lst) (ar) (ind-1)
+    FromArrayToList [] ar (ar.Length-1)
 
 let rec AddToList (lst) (s)= s::lst
 
@@ -181,7 +189,7 @@ type CraftedObject(Name: string, Recipe : string list) =
                              player.RemoveFromInventory this.Name
         | _ -> player.MoveX 0
 
-    
+    member this.GetName() = Name
 
     override this.ToString() = 
         let a = GroupBy Recipe
@@ -222,8 +230,7 @@ let Resources = ["Red_Herb";"Green_Herb";"Yellow_Herb"]
 let GetRandom x = 
     let rnd = new Random()
     rnd.Next(x)
-//working with the maze now
-//type Cell = Wall | Open | Chest | Monster | Boss | Fountain 
+ 
 
 //create abstract class Cell
 [<AbstractClass>]
@@ -263,8 +270,10 @@ type Chest() =
 
 type Monster() =
     inherit Cell()
-    let Attack = GetRandom 300
-    let Defense = GetRandom 300
+    let Attack = GetRandom 400
+    let Defense = GetRandom 400
+
+    let Damage = 100
     override this.Interact player = 
         let a = player.Atk
         let b = player.Def
@@ -282,15 +291,16 @@ type Monster() =
             player.MoveX 0
             let x = new Chest()
             if GetRandom 2 = 0 then x.Interact player
-        else player.Damage 50
+        else player.Damage Damage
     override this.ToString() = "M"
     override this.Equals (obj : obj) = 
         obj.GetType().Equals(typeof<Monster>)
 
 type Boss() =
     inherit Monster()
-    let Attack = 500
-    let Defense = 500
+    let Attack = 700
+    let Defense = 700
+    let Damage = 200
 
     override this.ToString() = "B"
     override this.Equals (obj : obj) = 
@@ -307,8 +317,6 @@ type Fountain() =
 
 
 let mutable dimension = 15
-
-
 
 let casilla_thing x y =
     let i = GetRandom 20
@@ -354,7 +362,8 @@ let GetInt (question : string)=
         match k with
         | ConsoleKey.UpArrow -> G question (ind+1)
         | ConsoleKey.DownArrow -> G question (ind-1)
-        | ConsoleKey.Enter -> ind
+        | ConsoleKey.Enter -> Console.Clear()
+                              ind
         |_ -> G question ind
 
     G question 0
@@ -407,7 +416,7 @@ let CreateCraftedObject( recipe :string) =
 
     let b = Array.map(fun x -> RemoveEmpty x) (a.[1].Split(','))
 
-    Crafts <- AddToList Crafts (new CraftedObject(name, (FromArrayToList [] b (b.Length-1))))
+    Crafts <- AddToList Crafts (new CraftedObject(name, (FromArrayToList b)))
 
 
 let InitializeCrafts() = 
@@ -420,7 +429,7 @@ let InitializeCrafts() =
 let EndGame (k: ConsoleKey) (player:Player)=
     if k.Equals(ConsoleKey.Escape) then 1
     else if player.HealthLevel <= 0 then 2
-    else if maze[player.YPos, player.Xpos].Equals(new Boss()) then 3
+    else if maze[player.YPos, player.Xpos].Equals(new Boss()) && not MazeMask[player.YPos, player.Xpos] then 3
     else 4
 
 let ValidPosition x y = 
@@ -479,15 +488,17 @@ let Craft (player : Player) =
 
     
 let UsePotion (player: Player)=
+    let func (ob:CraftedObject) = ob.Name
     let rec GetOptions (lstres : list<CraftedObject>) (lstopt: list<CraftedObject>) =
         if lstopt.IsEmpty then lstres else
         if Contains player.InventoryCopy (lstopt.Head).Name then GetOptions (AddToList lstres lstopt.Head) (lstopt.Tail)
         else GetOptions lstres lstopt.Tail
     let op = GetOptions [] Crafts
-    if op.IsEmpty then Console.WriteLine("You do not have any potions in your inventory. Get To Work!")
+    if op.IsEmpty then Console.Clear()
+                       Console.WriteLine("You do not have any potions in your inventory. Get To Work!")
                        Thread.Sleep(2000)
     else
-    let ind = PrintMenuWithOptions "Select the potion you wish to use" op 0
+    let ind = PrintMenuWithOptions "Select the potion you wish to use" (FromArrayToList(Array.map(fun x -> func x)(FromListToArray(op)))) 0
     let a = op.Item ind
     a.Use(player)
     
@@ -538,6 +549,7 @@ let rec CanReachBoss() =
         CanReachBoss()
     else
     let ran1 = GetRandom visited.Length
+    MazeMask[Bossy,Bossx] <- true
     visited.Item ran1
 
 
@@ -558,7 +570,7 @@ let PrintMaze(player:Player) =
         for j in [0..maze.GetLength(1)-1] do
             if not (player.YPos.Equals(i) && player.Xpos.Equals(j)) then
                 Console.Write(" " + maze[i,j].ToString())
-            else Console.Write(" ♫")
+            else Console.Write("♫")
 
 
 let PrintBoolMaze() =
@@ -605,9 +617,9 @@ let rec InitialLoop(player:Player) =
     Console.Clear()
     let mutable k = ConsoleKey.A
     while  ((EndGame k player).Equals(4)) do
-        Console.WriteLine(player.ToString())
+        //Console.WriteLine(player.ToString())
         PrintMaze(player)
-        Console.WriteLine()
+        //Console.WriteLine()
         k <- Console.ReadKey(false).Key
         GetDirection k player
         InteractWithMaze player 

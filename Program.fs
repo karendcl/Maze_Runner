@@ -310,7 +310,8 @@ let casilla_thing x y =
     let i = GetRandom 20
 
     match i with
-    |19 -> new Open() :> Cell
+    //the casting is necessary because the type of the array is Cell. for the program to compile
+    |20 -> new Open() :> Cell
     | 0 -> new Wall() 
     | 4 -> new Wall()
     | 5 -> new Wall()
@@ -331,8 +332,6 @@ let casilla_bool x y =
     else true
 
     
-
-
 let mutable MazeMask = Array2D.init dimension dimension ( casilla_bool )
 
 let ResetBoolMaze() = 
@@ -498,29 +497,6 @@ let GetDirection (keyPressed: ConsoleKey) (player : Player)=
     | _ -> MovePlayer 0 0 player 
 
 
-let FoundChest (jugador:Player)=
-    let l = Resources.Length
-    let ind = GetRandom l
-    let drop = Resources.Item ind
-    jugador.AddToInventory drop
-
-
-let WonMonsterFight (jugador:Player) (damage:int) =
-    jugador.Damage damage
-    let b = GetRandom 2
-    match b with
-    |0 -> MovePlayer 0 0 jugador
-    |_ -> FoundChest jugador
-
-
-let FightMonster (jugador:Player) (boss:bool)= 
-   let factor = 
-        if boss then 3 else 2 
-   let MonsterAtk = GetRandom jugador.Atk * factor
-   let MonsterDef = GetRandom jugador.Def * factor
-   let d = MonsterAtk + MonsterDef - jugador.Def - jugador.Atk
-   let absd = abs d
-   if d>0 then jugador.Damage absd else WonMonsterFight jugador absd
 
 
 let rec CanReachBoss() =
@@ -557,9 +533,6 @@ let rec CanReachBoss() =
     let ran1 = GetRandom visited.Length
     visited.Item ran1
 
-
-let FoundFountain (jugador:Player) =
-    jugador.ResetHealth() 
 
 let InteractWithMaze (jugador:Player)  =
     let a = jugador.Xpos

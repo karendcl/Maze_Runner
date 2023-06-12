@@ -1,2 +1,3 @@
-Glass = Sand,Sand,Sand
-Bed = Wood,Wood,Wool
+HealthPotion = Green_Herb,Green_Herb,Green_Herb
+AttackPotion = Yellow_Herb,Yellow_Herb,Yellow_Herb
+DefensePotion = Red_Herb, Red_Herb, Red_Herb

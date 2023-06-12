@@ -106,31 +106,28 @@ type Inventory() =
 
 
 //working with the player
-type Player(name :string) =
+type Player() =
     let mutable Positionx = 1
     let mutable Positiony = 1
     let mutable Attack = 200
     let mutable Defense = 200
-    let mutable Level = 1
     let mutable Health = 300
     let mutable MaxHealth = 300
+    let mutable Name = ""
     let mutable Inventory = new Inventory()
 
-    member this.Initialize(x : int, y: int)=
+    member this.Initialize(x : int, y: int, name:string)=
         Positionx <- x
         Positiony <- y
+        Name <- name
+        
       
+    
     member this.MoveY steps = Positiony <- Positiony + steps
     member this.Xpos = Positionx
     member this.YPos =  Positiony
     member this.Atk = Attack
     member this.Def = Defense
-    member this.LevelUp =
-      let a = Level+1
-      Attack <- Attack * 15/10
-      Defense <- Defense * 15/10
-      Level <- a
-      MaxHealth <- MaxHealth + 100
 
     member this.ResetHealth() = 
         Health <- MaxHealth
@@ -145,7 +142,11 @@ type Player(name :string) =
         let h = Health + a
         if h > MaxHealth then Health <- MaxHealth else Health <- h
     
+    member this.IncreaseAttack() = 
+        Attack <- Attack + 100
 
+    member this.IncreaseDefense() = 
+        Defense <- Defense + 100
     member this.AddToInventory x = 
         Inventory.AddToInventory x
             
@@ -158,7 +159,7 @@ type Player(name :string) =
     override this.ToString() = 
         let inv = Inventory.ToString()
         
-        "Nombre: " + name + "\n" + 
+        "Nombre: " + Name + "\n" + 
         "Posicion: " + Positionx.ToString() + " " + Positiony.ToString() + "\n" + 
         "Health: " + Health.ToString() + "\n" + 
         "Inventario: " + "\n" + inv + "\n"
@@ -167,6 +168,19 @@ type Player(name :string) =
 type CraftedObject(Name: string, Recipe : string list) = 
     member this.Name = Name
     member this.Recipe = Recipe
+
+    member this.Use(player:Player) = 
+        match this.Name with 
+        | "HealthPotion" -> player.RegenerateHealth 50 
+                            player.RemoveFromInventory this.Name
+        | "AttackPotion" -> player.IncreaseAttack()
+                            player.RemoveFromInventory this.Name
+        | "DefensePotion" -> player.IncreaseDefense()
+                             player.RemoveFromInventory this.Name
+        | _ -> player.MoveX 0
+
+    
+
     override this.ToString() = 
         let a = GroupBy Recipe
         let rec CreateString (a : list<string * int>) (res : string) =
@@ -177,6 +191,8 @@ type CraftedObject(Name: string, Recipe : string list) =
                 let d = snd(b)
                 CreateString a.Tail (res + c + " x" + d.ToString() + "; ") 
         Name + ".      " + CreateString a " "
+
+
 
 
 let rec PrintMenuWithOptions (header : string)(a : list<'a>) (ind :int)=
@@ -200,6 +216,7 @@ let rec PrintMenuWithOptions (header : string)(a : list<'a>) (ind :int)=
 
 //working with the maze now
 type Cell = Wall | Open | Chest | Monster | Boss | Fountain 
+
 
 let mutable dimension = 15
 
@@ -290,7 +307,7 @@ let ToStringC (c : Cell) =
     | Fountain -> "F"
 
 
-let Resources = ["Coal"; "Stick"; "Wood";"Stone";"Iron";"Gold";"RedStone";"Diamond";"Netherite";"Obsidian";"Emerald";"Copper";"Sand"; "Wool"]
+let Resources = ["Red_Herb";"Green_Herb";"Yellow_Herb"]
 
 let mutable Crafts: CraftedObject list = []
 
@@ -389,6 +406,16 @@ let Craft (player : Player) =
     if bo.Equals(true) then TryCraft player (Crafts.Item ind)
 
     
+let UsePotion (player: Player)=
+    let rec GetOptions (lstres : list<CraftedObject>) (lstopt: list<CraftedObject>) =
+        if lstopt.IsEmpty then lstres else
+        if Contains player.InventoryCopy (lstopt.Head).Name then GetOptions (AddToList lstres lstopt.Head) (lstopt.Tail)
+        else GetOptions lstres lstopt.Tail
+    let op = GetOptions [] Crafts
+    let ind = PrintMenuWithOptions "Select the potion you wish to use" op 0
+    let a = op.Item ind
+    a.Use(player)
+    
 
 let GetDirection (keyPressed: ConsoleKey) (player : Player)=
     match keyPressed with
@@ -397,6 +424,7 @@ let GetDirection (keyPressed: ConsoleKey) (player : Player)=
     | ConsoleKey.RightArrow -> if (ValidMove 1 0  player) then (MovePlayer 1 0 player)
     | ConsoleKey.LeftArrow -> if (ValidMove -1 0  player) then (MovePlayer -1 0 player)
     | ConsoleKey.C -> Craft player
+    | ConsoleKey.P -> UsePotion player
 
     | _ -> MovePlayer 0 0 player 
 
@@ -496,32 +524,33 @@ let PrintBoolMaze() =
         for j in [0..MazeMask.GetLength(1)-1] do
             Console.Write(" " + MazeMask[i,j].ToString())
 
-let PlacePlayer(player:Player) = 
+let PlacePlayer(player:Player) (name) = 
     let (x,y) = CanReachBoss() 
-    player.Initialize(x,y)
+    player.Initialize(x,y, name)
 
 
 
 let SetUpPlayer() = 
-    let player = new Player("")
-    PlacePlayer player
-
+    let player = new Player()
     Console.Write("Please write the name of your player: \n\n\t --> ")
     let name = Console.ReadLine()
-
+    PlacePlayer player name
     player
-let rec InitialLoop() = 
 
-    //set fountains
+let NewPlayer()=
+    let player = SetUpPlayer()
+    InteractWithMaze player
+    player 
 
+let NewGame() = 
     Console.Clear()
     GenerateNewMaze()
 
-    let player = SetUpPlayer()
 
-    InitializeCrafts()
-    InteractWithMaze player 
+let rec InitialLoop(player:Player) = 
+    player.ResetHealth()
 
+    Console.Clear()
     let mutable k = ConsoleKey.A
     while  ((EndGame k player).Equals(4)) do
         Console.WriteLine(player.ToString())
@@ -545,11 +574,14 @@ let rec InitialLoop() =
     let question = "Wanna Play Again?"
     let opt = ["Yes";"No"]
     let ans = PrintMenuWithOptions question opt 0
-    if ans.Equals(0) then InitialLoop()
+    if ans.Equals(0) then InitialLoop(player)
 
 [<EntryPoint>]
 let main args = 
-    InitialLoop()
+    InitializeCrafts()
+    NewGame()
+    let player = NewPlayer()
+    InitialLoop(player)
     1
 
 

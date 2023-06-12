@@ -214,28 +214,111 @@ let rec PrintMenuWithOptions (header : string)(a : list<'a>) (ind :int)=
     | _ -> PrintMenuWithOptions header a ind2
 
 
+let Resources = ["Red_Herb";"Green_Herb";"Yellow_Herb"]
+let GetRandom x = 
+    let rnd = new Random()
+    rnd.Next(x)
 //working with the maze now
-type Cell = Wall | Open | Chest | Monster | Boss | Fountain 
+//type Cell = Wall | Open | Chest | Monster | Boss | Fountain 
+
+//create abstract class Cell
+[<AbstractClass>]
+type Cell() = 
+    abstract member Interact : Player -> unit
+    
+let mutable Crafts: CraftedObject list = []
+
+type Wall() = 
+    inherit Cell()
+    override this.Interact player = 
+        player.MoveX 0
+    
+    override this.ToString() = "▀"
+    override this.Equals (obj : obj) = 
+        obj.GetType().Equals(typeof<Wall>)
+
+type Open() =
+    inherit Cell()
+    override this.Interact player = 
+        player.MoveX 0
+    override this.ToString() = " "
+    override this.Equals (obj : obj) = 
+        obj.GetType().Equals(typeof<Open>)
+
+type Chest() =
+    inherit Cell()
+    override this.Interact player =
+        let l = Resources.Length
+        let ind = GetRandom l
+        let drop = Resources.Item ind
+        player.AddToInventory drop
+    
+    override this.ToString() = "C"
+    override this.Equals (obj : obj) = 
+        obj.GetType().Equals(typeof<Chest>)
+
+type Monster() =
+    inherit Cell()
+    let Attack = GetRandom 300
+    let Defense = GetRandom 300
+    override this.Interact player = 
+        let a = player.Atk
+        let b = player.Def
+        let c = Attack
+        let d = Defense
+        let rec Fight (a : int) (b : int) (c : int) (d : int) =
+            if a <= 0 then false
+            elif c <= 0 then true
+            else
+                let e = a - d
+                let f = c - b
+                Fight e b f d
+        let res = Fight a b c d
+        if res then 
+            player.MoveX 0
+            let x = new Chest()
+            if GetRandom 2 = 0 then x.Interact player
+        else player.Damage 50
+    override this.ToString() = "M"
+    override this.Equals (obj : obj) = 
+        obj.GetType().Equals(typeof<Monster>)
+
+type Boss() =
+    inherit Monster()
+    let Attack = 500
+    let Defense = 500
+
+    override this.ToString() = "B"
+    override this.Equals (obj : obj) = 
+        obj.GetType().Equals(typeof<Boss>)
+
+type Fountain() =
+    inherit Cell()
+    override this.Interact player = 
+        player.ResetHealth()
+    override this.ToString() = "F"
+    override this.Equals (obj : obj) = 
+        obj.GetType().Equals(typeof<Fountain>)
+
 
 
 let mutable dimension = 15
 
-let GetRandom x = 
-    let rnd = new Random()
-    rnd.Next(x)
 
 
 let casilla_thing x y =
-    let i = GetRandom 7
+    let i = GetRandom 20
 
     match i with
-    | 0 -> Cell.Wall
-    | 4 -> Cell.Wall
-    | 1 -> Cell.Chest
-    | 2 -> Cell.Fountain
-    | 3 -> Cell.Monster
-    | _ -> Cell.Open
-
+    |19 -> new Open() :> Cell
+    | 0 -> new Wall() 
+    | 4 -> new Wall()
+    | 5 -> new Wall()
+    | 6 -> new Wall()
+    | 1 -> new Chest()
+    | 2 -> new Fountain()
+    | 3 -> new Monster()
+    | _ -> new Open()
 
 let mutable maze = Array2D.init dimension dimension (casilla_thing)
 
@@ -244,10 +327,10 @@ let mutable Bossy = 0
 
 let casilla_bool x y =
     let thing = maze[x,y]
-    match thing with
-    | Cell.Wall -> false
-    | Cell.Boss -> false
-    | _ -> true
+    if thing.Equals(new Wall()) || thing.Equals(new Boss()) then false
+    else true
+
+    
 
 
 let mutable MazeMask = Array2D.init dimension dimension ( casilla_bool )
@@ -284,32 +367,18 @@ let GenerateNewMaze()=
     let mutable k = true
 
     while k do
-        match a[Bossy,Bossx] with
-            |Cell.Wall ->  Bossx <- GetRandom dimension
-                           Bossy <- GetRandom dimension
-            |_ -> k<-false
+        if a[Bossy,Bossx].Equals(new Wall()) then
+            Bossx <- GetRandom dimension
+            Bossy <- GetRandom dimension
+            
+        else k<-false
 
-    a[Bossy,Bossx] <- Cell.Boss
+    a[Bossy,Bossx] <- new Boss()
     maze <- a
 
     ResetBoolMaze()
 
 
-//add a ToString method to the cell type
-
-let ToStringC (c : Cell) = 
-    match c with
-    | Wall -> "▀"
-    | Open -> " "
-    | Chest -> "C"
-    | Monster -> "M"
-    | Boss -> "B"
-    | Fountain -> "F"
-
-
-let Resources = ["Red_Herb";"Green_Herb";"Yellow_Herb"]
-
-let mutable Crafts: CraftedObject list = []
 
 let readlines (filepath :string) = 
     let mutable (res: string list) = []
@@ -348,11 +417,11 @@ let InitializeCrafts() =
 let EndGame (k: ConsoleKey) (player:Player)=
     if k.Equals(ConsoleKey.Escape) then 1
     else if player.HealthLevel <= 0 then 2
-    else if maze[player.YPos, player.Xpos].Equals(Cell.Boss) then 3
+    else if maze[player.YPos, player.Xpos].Equals(new Boss()) then 3
     else 4
 
 let ValidPosition x y = 
-        not(x < 0 || y<0 || x >= dimension || y>=dimension || maze[y,x] = Cell.Wall) 
+        not(x < 0 || y<0 || x >= dimension || y>=dimension || maze[y,x] = new Wall()) 
 
 let ValidMove xchange ychange (player: Player) = 
         let newpos1 = player.Xpos + xchange
@@ -500,13 +569,7 @@ let InteractWithMaze (jugador:Player)  =
     let NewPosition = MazeMask[b,a]
     if NewPosition then
         MazeMask[b,a] <- false
-        match thing with
-        | Cell.Monster -> FightMonster jugador false
-        | Cell.Chest -> FoundChest jugador
-        | Cell.Boss -> FightMonster jugador true
-        | Cell.Fountain -> FoundFountain jugador
-        | _ -> MovePlayer 0 0 jugador
-    else MovePlayer 0 0 jugador
+        thing.Interact jugador
 
 
 let PrintMaze(player:Player) =
@@ -514,7 +577,7 @@ let PrintMaze(player:Player) =
         Console.WriteLine()
         for j in [0..maze.GetLength(1)-1] do
             if not (player.YPos.Equals(i) && player.Xpos.Equals(j)) then
-                Console.Write(" " + ToStringC(maze[i,j]))
+                Console.Write(" " + maze[i,j].ToString())
             else Console.Write(" ♫")
 
 

@@ -122,7 +122,7 @@ type Player() =
         Name <- name
         
       
-    
+    member this.GetName() = Name
     member this.MoveY steps = Positiony <- Positiony + steps
     member this.Xpos = Positionx
     member this.YPos =  Positiony
@@ -155,6 +155,8 @@ type Player() =
     member this.MoveX steps = Positionx <- Positionx + steps
 
     member this.InventoryCopy = Inventory.Clone()
+
+    
 
     override this.ToString() = 
         let inv = Inventory.ToString()
@@ -196,6 +198,8 @@ type CraftedObject(Name: string, Recipe : string list) =
 
 
 let rec PrintMenuWithOptions (header : string)(a : list<'a>) (ind :int)=
+    if a.Length.Equals(0) then -1
+    else
     Console.Clear()
     Console.WriteLine(header)
 
@@ -480,6 +484,9 @@ let UsePotion (player: Player)=
         if Contains player.InventoryCopy (lstopt.Head).Name then GetOptions (AddToList lstres lstopt.Head) (lstopt.Tail)
         else GetOptions lstres lstopt.Tail
     let op = GetOptions [] Crafts
+    if op.IsEmpty then Console.WriteLine("You do not have any potions in your inventory. Get To Work!")
+                       Thread.Sleep(2000)
+    else
     let ind = PrintMenuWithOptions "Select the potion you wish to use" op 0
     let a = op.Item ind
     a.Use(player)
@@ -566,15 +573,20 @@ let PlacePlayer(player:Player) (name) =
 
 
 
-let SetUpPlayer() = 
+let rec SetUpPlayer(s:string) = 
+    Console.Clear()
     let player = new Player()
-    Console.Write("Please write the name of your player: \n\n\t --> ")
-    let name = Console.ReadLine()
-    PlacePlayer player name
+    if s.Equals("") then
+        Console.Write("Please write the name of your player: \n\n\t --> ")
+        SetUpPlayer(Console.ReadLine())
+    else
+    PlacePlayer player s
     player
+     
+    
 
-let NewPlayer()=
-    let player = SetUpPlayer()
+let NewPlayer(s:string)=
+    let player = SetUpPlayer(s)
     InteractWithMaze player
     player 
 
@@ -582,10 +594,14 @@ let NewGame() =
     Console.Clear()
     GenerateNewMaze()
 
+let RestartGame(player:Player)=
+    NewGame()
+    NewPlayer (player.GetName())
+
+    
 
 let rec InitialLoop(player:Player) = 
-    player.ResetHealth()
-
+    
     Console.Clear()
     let mutable k = ConsoleKey.A
     while  ((EndGame k player).Equals(4)) do
@@ -605,19 +621,37 @@ let rec InitialLoop(player:Player) =
     |3-> Console.WriteLine("You have won!")
     |_ -> Console.WriteLine("Bug?")
 
-    Thread.Sleep(1000)
+    Thread.Sleep(2000)
 
     let question = "Wanna Play Again?"
     let opt = ["Yes";"No"]
     let ans = PrintMenuWithOptions question opt 0
-    if ans.Equals(0) then InitialLoop(player)
+    if ans.Equals(0) then 
+        InitialLoop (RestartGame(player))
+
+let MainMenu()=
+    Console.Clear()
+    let header = "Welcome to the game! \n\n\n The goal of the game is for you to find your way around the maze, reach the Boss, and win the fight against it.\n To move around the maze you can use the arrows on your keyboard.\n To craft potions you can press the C key.\n To use a potion you can press the P key.\n To exit the game you can press the Escape key\n\n Understood? \n Great! Let's get started!"
+    
+    for i in header do
+        Console.Write(i)
+        Thread.Sleep(50)
+    
+    Console.Clear()
+    
+    let question = "\n\n Please select an option"
+    let opt = ["New Game";"Exit"]
+    PrintMenuWithOptions question opt 0
+    // if ans.Equals(0) then NewGame()
+    // else ()
 
 [<EntryPoint>]
 let main args = 
     InitializeCrafts()
-    NewGame()
-    let player = NewPlayer()
-    InitialLoop(player)
+    if MainMenu().Equals(0) then 
+        NewGame()
+        let player = NewPlayer("")
+        InitialLoop(player)
     1
 
 

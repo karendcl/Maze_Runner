@@ -66,11 +66,6 @@ module ListMethods =
         
         GroupByAll lista [] 
 
-    let IndexOf (objeto:'a) (lst :list<'a>) =     
-        let rec GetIndex (ind :int) ( lista : list<'a>) (obje:'a) =
-            let length = lista.Length
-            if ind >= length then -1 elif (lista.Item ind).Equals(obje) then ind else GetIndex (ind+1) lista obje
-        GetIndex 0 lst objeto
 
     let Reverse (lst :list<'a>) = 
         let rec Rev acc = function
@@ -80,7 +75,11 @@ module ListMethods =
         Rev [] lst
 
     let Enqueue (q : list<'a>) (item:'a) = 
-        Reverse (AddToList (Reverse q) item)
+        let a = Reverse q
+        let b = AddToList a item
+        b |> Reverse
+        
+       // Reverse (AddToList (Reverse q) item)
         
     let Dequeue (lst : list<'a>) = lst.Tail
 

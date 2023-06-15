@@ -60,4 +60,6 @@ module Player =
             "Nombre: " + Name + "\n" + 
             "Posicion: " + Positionx.ToString() + " " + Positiony.ToString() + "\n" + 
             "Health: " + Health.ToString() + "\n" + 
+            "Attack: " + Attack.ToString() + "\n" + 
+            "Defense: " + Defense.ToString() + "\n" + 
             "Inventario: " + "\n" + inv + "\n"

@@ -27,4 +27,4 @@ module Inventory =
                     let c = fst(b)
                     let d = snd(b)
                     CreateString a.Tail (res + c + " x" + d.ToString() + "\n\t") 
-            CreateString a "\t"
+            CreateString a "\n\t"

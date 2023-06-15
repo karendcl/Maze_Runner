@@ -4,6 +4,7 @@ open Game.Player
 open System
 open Game.Maze
 open Game.Crafted
+open Game.Cell
 
 module Printing =
     
@@ -47,12 +48,21 @@ module Printing =
             (-1, false) 
     
     let PrintMaze(player:Player) =
+        
+
         for i in [0..maze.GetLength(0)-1] do
-            Console.WriteLine()
+            Console.WriteLine(" ")
             for j in [0..maze.GetLength(1)-1] do
                 if not (player.YPos.Equals(i) && player.Xpos.Equals(j)) then
+                    if (MazeMask[i,j] = false) && not (maze[i,j].Equals(new Wall())) then maze[i,j] <- new Open()
                     Console.Write(" " + maze[i,j].ToString())
-                else Console.Write("♫")
+                else 
+                    let k = Console.ForegroundColor = ConsoleColor.Cyan 
+                    Console.Write(" ♫")
+                    Console.ResetColor()
+            Console.Write(" ")
+        Console.WriteLine()
+        
 
 
     let PrintBoolMaze() =

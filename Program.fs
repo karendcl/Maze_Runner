@@ -42,6 +42,11 @@ module Main =
         let a = op.Item ind
         a.Use(player)
         
+    let Printplayer (player:Player)=
+        Console.Clear()
+        Console.WriteLine(player.ToString())
+        let k = Console.ReadKey()
+        Console.WriteLine("")
 
     let GetDirection (keyPressed: ConsoleKey) (player : Player)=
         match keyPressed with
@@ -51,6 +56,7 @@ module Main =
         | ConsoleKey.LeftArrow -> if (ValidMove -1 0  player) then (MovePlayer -1 0 player)
         | ConsoleKey.C -> Craft player
         | ConsoleKey.P -> UsePotion player
+        | ConsoleKey.I -> Printplayer player
 
         | _ -> MovePlayer 0 0 player 
 
@@ -80,7 +86,14 @@ module Main =
 
     let NewGame() = 
         Console.Clear()
+        GetDimension()
         GenerateNewMaze()
+        let rec ValidMaze() = 
+            if BossReachAmount() <=20 then 
+                GenerateNewMaze()
+                ValidMaze()
+        ValidMaze()
+
 
     let RestartGame(player:Player)=
         NewGame()
@@ -93,9 +106,7 @@ module Main =
         Console.Clear()
         let mutable k = ConsoleKey.A
         while  ((EndGame k player).Equals(4)) do
-            //Console.WriteLine(player.ToString())
             PrintMaze(player)
-            //Console.WriteLine()
             k <- Console.ReadKey(false).Key
             GetDirection k player
             InteractWithMaze player 
@@ -117,25 +128,26 @@ module Main =
         if ans.Equals(0) then 
             InitialLoop (RestartGame(player))
 
+    let PrintLetter (i)=
+        Console.Write(i.ToString())
+        Thread.Sleep(50)
+
     let MainMenu()=
         Console.Clear()
-        let header = "Welcome to the game! \n\n\n The goal of the game is for you to find your way around the maze, reach the Boss, and win the fight against it.\n To move around the maze you can use the arrows on your keyboard.\n To craft potions you can press the C key.\n To use a potion you can press the P key.\n To exit the game you can press the Escape key\n\n Understood? \n Great! Let's get started!"
+        //let header = "Welcome to the game! \n\n\n The goal of the game is for you to find your way around the maze, reach the Boss, and win the fight against it.\n To move around the maze you can use the arrows on your keyboard.\n To craft potions you can press the C key.\n To use a potion you can press the P key.\n To view the player and your Inventory press I \n To exit the game you can press the Escape key\n\n Understood? \n Great! Let's get started!"
+        let header = "Hola"
+        Seq.toList header |> List.iter PrintLetter
         
-        for i in header do
-            Console.Write(i)
-            Thread.Sleep(50)
-        
+        let k = Console.ReadKey()
         Console.Clear()
         
         let question = "\n\n Please select an option"
         let opt = ["New Game";"Exit"]
         PrintMenuWithOptions question opt 0
-        // if ans.Equals(0) then NewGame()
-        // else ()
 
     [<EntryPoint>]
     let main args = 
-        InitializeCrafts()
+        //InitializeCrafts()
         if MainMenu().Equals(0) then 
             NewGame()
             let player = NewPlayer("")

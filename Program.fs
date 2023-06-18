@@ -134,8 +134,8 @@ module Main =
 
     let MainMenu()=
         Console.Clear()
-        //let header = "Welcome to the game! \n\n\n The goal of the game is for you to find your way around the maze, reach the Boss, and win the fight against it.\n To move around the maze you can use the arrows on your keyboard.\n To craft potions you can press the C key.\n To use a potion you can press the P key.\n To view the player and your Inventory press I \n To exit the game you can press the Escape key\n\n Understood? \n Great! Let's get started!"
-        let header = "Hola"
+        let header = "Welcome to the game! \n\n\n The goal of the game is for you to find your way around the maze, reach the Boss, and win the fight against it.\n To move around the maze you can use the arrows on your keyboard.\n To craft potions you can press the C key.\n To use a potion you can press the P key.\n To view the player and your Inventory press I \n To exit the game you can press the Escape key\n\n Understood? \n Great! Let's get started!"
+        //let header = "Hola"
         Seq.toList header |> List.iter PrintLetter
         
         let k = Console.ReadKey()

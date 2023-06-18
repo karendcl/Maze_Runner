@@ -38,7 +38,7 @@ module Main =
                            Console.WriteLine("You do not have any potions in your inventory. Get To Work!")
                            Thread.Sleep(2000)
         else
-        let ind = PrintMenuWithOptions "Select the potion you wish to use" (FromArrayToList(Array.map(fun x -> func x)(FromListToArray(op)))) 0
+        let ind = PrintMenuWithOptions "Select the potion you wish to use" (List.map(fun x -> func x) op) 0
         let a = op.Item ind
         a.Use(player)
         
@@ -104,23 +104,33 @@ module Main =
     let rec InitialLoop(player:Player) = 
         
         Console.Clear()
-        let mutable k = ConsoleKey.A
-        while  ((EndGame k player).Equals(4)) do
-            PrintMaze(player)
-            k <- Console.ReadKey(false).Key
-            GetDirection k player
-            InteractWithMaze player 
-            Console.Clear()
+        let k = ConsoleKey.A
+        let rec GameLoop (k :ConsoleKey) = 
+            if (EndGame k player).Equals(4) then  
+                PrintMaze(player)
+                let key =  Console.ReadKey(false).Key
+                GetDirection key player
+                InteractWithMaze player 
+                Console.Clear()
+                GameLoop key
+            else ()
+        GameLoop k
+        // while  ((EndGame k player).Equals(4)) do
+        //     PrintMaze(player)
+        //     k <- Console.ReadKey(false).Key
+        //     GetDirection k player
+        //     InteractWithMaze player 
+        //     Console.Clear()
 
         Console.WriteLine(player.ToString() + "\n\n")
 
         match EndGame k player with
-        |1 -> Console.WriteLine("You pressed Escape!")
         |2 -> Console.WriteLine("You are dead!")
         |3-> Console.WriteLine("You have won!")
-        |_ -> Console.WriteLine("Bug?")
+        |_ -> Console.WriteLine("You pressed Escape!")
+       
 
-        Thread.Sleep(2000)
+        let k= Console.ReadKey()
 
         let question = "Wanna Play Again?"
         let opt = ["Yes";"No"]
@@ -141,7 +151,7 @@ module Main =
         let k = Console.ReadKey()
         Console.Clear()
         
-        let question = "\n\n Please select an option"
+        let question = "Please select an option"
         let opt = ["New Game";"Exit"]
         PrintMenuWithOptions question opt 0
 

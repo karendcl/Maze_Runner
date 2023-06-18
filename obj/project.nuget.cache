@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "zGGtdL5MkirMB35Ir7WCt14RT9/crAZ9g0IR2JOyQSct8r7iPrMTgSsfijEWZgrLJUVK6DNtAnB4q+xNUPKLdA==",
+  "dgSpecHash": "Mc3CmMo9Z04YLye1Wd7iGSEsaqZXQ1CX8c3IMTxqLsx+QKG6EqSy1duo/uUK+iCEDuW7bSUresEWoZmnwbDYow==",
   "success": true,
-  "projectFilePath": "C:\\Karen\\Universidad\\4to semestre\\Programacion Declarat\\Proj\\Maze_Runner\\MazeRunner2.0.fsproj",
+  "projectFilePath": "C:\\Karen\\Universidad\\4to semestre\\Programacion Declarat\\Proj - Copy\\Maze_Runner\\MazeRunner2.0.fsproj",
   "expectedPackageFiles": [
     "C:\\Users\\karen\\.nuget\\packages\\fsharp.core\\6.0.1\\fsharp.core.6.0.1.nupkg.sha512"
   ],

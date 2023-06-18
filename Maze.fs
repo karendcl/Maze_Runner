@@ -128,7 +128,6 @@ module Maze =
         BFS(Bossx,Bossy)
 
 
-
     let rec CanReachBoss() =
         let visited = BFSfromBoss ()
         if visited.Length <=10 then 

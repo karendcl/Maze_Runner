@@ -5,6 +5,7 @@ open System
 open Game.Maze
 open Game.Crafted
 open Game.Cell
+open Game.ListMethods
 
 module Printing =
     
@@ -15,35 +16,39 @@ module Printing =
         Console.Clear()
         Console.WriteLine(header)
 
-        let mutable ind2 = ind
-        if ind < 0 then ind2 <- a.Length-1 elif ind > a.Length-1 then ind2 <- 0 else ind2 <- ind
+        if ind < 0 then (PrintMenuWithOptions header a a.Length-1) elif ind > a.Length-1 then (PrintMenuWithOptions header a 0) 
+        else 
 
-        for i in [0..a.Length-1] do 
-            if i.Equals(ind2) then Console.WriteLine("---> " + (a.Item i).ToString())
-            else Console.WriteLine( (a.Item i).ToString())
-        
-        let k = Console.ReadKey().Key
-        match k with
-        | ConsoleKey.DownArrow -> PrintMenuWithOptions header a (ind2+1)
-        | ConsoleKey.UpArrow -> PrintMenuWithOptions header a (ind2-1)
-        | ConsoleKey.Enter -> ind2
-        | _ -> PrintMenuWithOptions header a ind2
+            for i in [0..a.Length-1] do 
+                if i.Equals(ind) then Console.WriteLine("---> " + (a.Item i).ToString())
+                else Console.WriteLine( (a.Item i).ToString())
+            
+            let k = Console.ReadKey().Key
+            match k with
+            | ConsoleKey.DownArrow -> PrintMenuWithOptions header a (ind+1)
+            | ConsoleKey.UpArrow -> PrintMenuWithOptions header a (ind-1)
+            | ConsoleKey.Enter -> ind
+            | _ -> PrintMenuWithOptions header a ind
 
 
 
     let PrintCraftMenu (player:Player) = 
         Console.Clear()
-        if not (player.InventoryCopy.IsEmpty) 
+        
+        let Funct (a:CraftedObject) = CheckForRecipe player.InventoryCopy a.Recipe
+
+        let options = Crafts |> List.filter(fun x -> Funct x )
+        
+        if not (options.IsEmpty) 
             then
-            let mutable header = ""
-            header <- header + "The player's Inventory"
-            header <- header + player.ShowInventory()
-            header <- header + "\n\n\n These are the possible crafts:"
-            let indexofcraft = PrintMenuWithOptions header Crafts 0
-            (indexofcraft, true)
+            let header = "The player's Inventory: \n" + player.ShowInventory() + "\n\n\n These are the possible crafts: " 
+            let indexofcraft = PrintMenuWithOptions header options 0
+            let thing = options.Item indexofcraft
+            let cr = IndexOf Crafts thing
+            (cr, true)
             
         else
-            Console.WriteLine("You do not have anything in your inventory. Get To Work! \n\n Press Any Key to Continue")
+            Console.WriteLine("You do not have enough materials to craft. Get To Work! \n\n Press Any Key to Continue")
             let a = Console.ReadKey()
             (-1, false) 
     

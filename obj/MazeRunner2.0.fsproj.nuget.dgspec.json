@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Karen\\Universidad\\4to semestre\\Programacion Declarat\\Proj\\Maze_Runner\\MazeRunner2.0.fsproj": {}
+    "C:\\Karen\\Universidad\\4to semestre\\Programacion Declarat\\Proj - Copy\\Maze_Runner\\MazeRunner2.0.fsproj": {}
   },
   "projects": {
-    "C:\\Karen\\Universidad\\4to semestre\\Programacion Declarat\\Proj\\Maze_Runner\\MazeRunner2.0.fsproj": {
+    "C:\\Karen\\Universidad\\4to semestre\\Programacion Declarat\\Proj - Copy\\Maze_Runner\\MazeRunner2.0.fsproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Karen\\Universidad\\4to semestre\\Programacion Declarat\\Proj\\Maze_Runner\\MazeRunner2.0.fsproj",
+        "projectUniqueName": "C:\\Karen\\Universidad\\4to semestre\\Programacion Declarat\\Proj - Copy\\Maze_Runner\\MazeRunner2.0.fsproj",
         "projectName": "MazeRunner2.0",
-        "projectPath": "C:\\Karen\\Universidad\\4to semestre\\Programacion Declarat\\Proj\\Maze_Runner\\MazeRunner2.0.fsproj",
+        "projectPath": "C:\\Karen\\Universidad\\4to semestre\\Programacion Declarat\\Proj - Copy\\Maze_Runner\\MazeRunner2.0.fsproj",
         "packagesPath": "C:\\Users\\karen\\.nuget\\packages\\",
-        "outputPath": "C:\\Karen\\Universidad\\4to semestre\\Programacion Declarat\\Proj\\Maze_Runner\\obj\\",
+        "outputPath": "C:\\Karen\\Universidad\\4to semestre\\Programacion Declarat\\Proj - Copy\\Maze_Runner\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\karen\\AppData\\Roaming\\NuGet\\NuGet.Config"

@@ -47,15 +47,16 @@ module Cell=
 
     type Monster() =
         inherit Cell()
-        let Attack = GetRandom 400
-        let Defense = GetRandom 400
+        member this.Attack = GetRandom 400
+        member this.Defense = GetRandom 400
 
-        let Damage = 100
+        member this.Damage = 100
+
         override this.Interact player = 
             let a = player.Atk
             let b = player.Def
-            let c = Attack
-            let d = Defense
+            let c = this.Attack
+            let d = this.Defense
             let rec Fight (a : int) (b : int) (c : int) (d : int) =
                 if a <= 0 then false
                 elif c <= 0 then true
@@ -68,7 +69,7 @@ module Cell=
                 player.MoveX 0
                 let x = new Chest()
                 if GetRandom 2 = 0 then x.Interact player
-            else player.Damage Damage
+            else player.Damage this.Damage
         override this.ToString() = "M"
         override this.Equals (obj : obj) = 
             obj.GetType().Equals(typeof<Monster>)
@@ -76,9 +77,11 @@ module Cell=
 
     type Boss() =
         inherit Monster()
-        let Attack = 700
-        let Defense = 700
-        let Damage = 200
+        member this.Attack = GetRandom 700
+        member this.Defense = GetRandom 700
+        member this.Damage = 200
+
+        
 
         override this.ToString() = "B"
         override this.Equals (obj : obj) = 

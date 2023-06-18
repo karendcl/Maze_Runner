@@ -3,6 +3,15 @@ namespace Game
 open System
 
 module ListMethods =
+
+    let IndexOf (a: list<'a>) (thing: 'a) = 
+        let rec Indice (a :list<'a>) (thing:'a)  ind =
+            if (ind >= a.Length) then -1 else 
+            if (a.Item ind).Equals(thing) then ind
+            else Indice a thing ind+1
+
+
+        Indice a thing 0
     let Remove (lista: list<'a>) (item:'a) = 
         let rec RemoveOnce (listaorig : list<'a>) (listares : list<'a>) (item :'a) (found : bool)=
             //si la lista original esta vacia no hay mas que hacer

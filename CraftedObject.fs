@@ -14,11 +14,11 @@ module Crafted =
         member this.Use(player:Player) = 
             match this.Name with 
             | "HealthPotion" -> player.RegenerateHealth 50 
-                                player.RemoveFromInventory this.Name
+                                player.RemoveFromInventory "HealthPotion"
             | "AttackPotion" -> player.IncreaseAttack()
-                                player.RemoveFromInventory this.Name
+                                player.RemoveFromInventory "AttackPotion"
             | "DefensePotion" -> player.IncreaseDefense()
-                                 player.RemoveFromInventory this.Name
+                                 player.RemoveFromInventory "DefensePotion"
             | _ -> player.MoveX 0
 
         member this.GetName() = Name
@@ -35,16 +35,13 @@ module Crafted =
             Name + ".      " + CreateString a " "
 
     let readlines (filepath :string) = 
-        //let mutable (res: string list) = []
         use sr = new StreamReader(filepath)
 
         let rec CreateRes (currentlist:string list) =
             if sr.EndOfStream then currentlist else CreateRes (AddToList currentlist (sr.ReadLine()))
 
         CreateRes []
-        // while not sr.EndOfStream do
-        //     res <- AddToList res (sr.ReadLine())
-        // res
+        
 
 
     let CreateCraftedObject( recipe :string) =
@@ -74,8 +71,7 @@ module Crafted =
         
     let Crafts: CraftedObject list = InitializeCrafts()
 
-    let TryCraft (player:Player) (obje: CraftedObject) =
-        let rec CheckForRecipe (inventoryLst: list<'a>) (recipeLeft :list<'a>)=
+    let rec CheckForRecipe (inventoryLst: list<'a>) (recipeLeft :list<'a>)=
             if recipeLeft.Length.Equals(0) then true
             else
                 let a = recipeLeft.Head
@@ -83,6 +79,7 @@ module Crafted =
                     then
                         CheckForRecipe (Remove inventoryLst a ) recipeLeft.Tail 
                     else false
+    let TryCraft (player:Player) (obje: CraftedObject) =
 
         if CheckForRecipe player.InventoryCopy obje.Recipe then
             obje.Recipe |> List.iter (player.RemoveFromInventory)

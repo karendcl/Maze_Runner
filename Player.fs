@@ -8,7 +8,7 @@ module Player =
         let mutable Attack = 200
         let mutable Defense = 200
         let mutable Health = 300
-        let mutable MaxHealth = 300
+        let MaxHealth = 300
         let mutable Name = ""
         let mutable Inventory = new Inventory()
 
@@ -51,6 +51,8 @@ module Player =
         member this.MoveX steps = Positionx <- Positionx + steps
 
         member this.InventoryCopy = Inventory.Clone()
+
+        member this.MaxH = MaxHealth
 
         
 

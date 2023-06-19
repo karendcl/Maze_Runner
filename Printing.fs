@@ -16,7 +16,7 @@ module Printing =
         Console.Clear()
         Console.WriteLine(header)
 
-        if ind < 0 then (PrintMenuWithOptions header a a.Length-1) elif ind > a.Length-1 then (PrintMenuWithOptions header a 0) 
+        if ind < 0 then (PrintMenuWithOptions header a (a.Length-1)) elif ind > (a.Length-1) then (PrintMenuWithOptions header a 0) 
         else 
 
             for i in [0..a.Length-1] do 

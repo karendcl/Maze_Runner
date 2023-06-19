@@ -79,8 +79,9 @@ module Crafted =
                     then
                         CheckForRecipe (Remove inventoryLst a ) recipeLeft.Tail 
                     else false
-    let TryCraft (player:Player) (obje: CraftedObject) =
 
+
+    let TryCraft (player:Player) (obje: CraftedObject) =
         if CheckForRecipe player.InventoryCopy obje.Recipe then
             obje.Recipe |> List.iter (player.RemoveFromInventory)
             player.AddToInventory obje.Name

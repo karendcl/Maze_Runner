@@ -5,13 +5,12 @@ open System
 module ListMethods =
 
     let IndexOf (a: list<'a>) (thing: 'a) = 
-        let rec Indice (a :list<'a>) (thing:'a)  ind =
-            if (ind >= a.Length) then -1 else 
-            if (a.Item ind).Equals(thing) then ind
-            else Indice a thing ind+1
+        let rec IndexOf (a: list<'a>) (thing: 'a) (ind : int) = 
+            if a.Length.Equals(0) then -1
+            elif a.Head.Equals(thing) then ind
+            else IndexOf a.Tail thing (ind+1)
+        IndexOf a thing 0
 
-
-        Indice a thing 0
     let Remove (lista: list<'a>) (item:'a) = 
         let rec RemoveOnce (listaorig : list<'a>) (listares : list<'a>) (item :'a) (found : bool)=
             //si la lista original esta vacia no hay mas que hacer

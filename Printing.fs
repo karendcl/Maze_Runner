@@ -62,9 +62,7 @@ module Printing =
                     if (MazeMask[i,j] = false) && not (maze[i,j].Equals(new Wall())) then maze[i,j] <- new Open()
                     Console.Write(" " + maze[i,j].ToString())
                 else 
-                    let k = Console.ForegroundColor = ConsoleColor.Cyan 
                     Console.Write(" ♫")
-                    Console.ResetColor()
             Console.Write(" ")
         Console.WriteLine()
         
